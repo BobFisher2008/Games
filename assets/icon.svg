@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Canvas: rows went on first, the cobalt middle column is the last coat -->
+  <rect x="334" y="292" width="356" height="356" rx="16" fill="#F8F9FA"/>
+  <rect x="350" y="308" width="108" height="108" fill="#E0482F"/>
+  <rect x="458" y="308" width="108" height="108" fill="#2D5BD0"/>
+  <rect x="566" y="308" width="108" height="108" fill="#E0482F"/>
+  <rect x="350" y="416" width="108" height="108" fill="#F2B33D"/>
+  <rect x="458" y="416" width="108" height="108" fill="#2D5BD0"/>
+  <rect x="566" y="416" width="108" height="108" fill="#F2B33D"/>
+  <rect x="350" y="524" width="108" height="108" fill="#16936B"/>
+  <rect x="458" y="524" width="108" height="108" fill="#2D5BD0"/>
+  <rect x="566" y="524" width="108" height="108" fill="#16936B"/>
+  <!-- Masking tape holding the top-left corner -->
+  <rect x="290" y="270" width="130" height="40" rx="3" fill="#E8D59D" transform="rotate(-45 355 290)"/>
+  <!-- Roller finishing the middle column -->
+  <path d="M570 638 H608 V690 H512 V708" fill="none" stroke="#9AA3AF" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect x="444" y="612" width="136" height="52" rx="24" fill="#2D5BD0" stroke="#F8F9FA" stroke-width="9"/>
+  <rect x="460" y="621" width="104" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.35"/>
+  <rect x="486" y="704" width="52" height="84" rx="16" fill="#F8F9FA"/>
+</svg>

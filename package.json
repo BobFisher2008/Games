@@ -1,0 +1,36 @@
+{
+  "name": "last-coat",
+  "version": "1.0.0",
+  "description": "Last Coat: order-based painting puzzle",
+  "scripts": {
+    "build": "node scripts/build-web.mjs",
+    "sync": "npm run build && npx cap sync android",
+    "open": "npx cap open android",
+    "apk": "npm run sync && node scripts/gradle.mjs assembleDebug",
+    "bundle": "node scripts/build-web.mjs --release && npx cap sync android && node scripts/gradle.mjs bundleRelease",
+    "phone": "npm run sync && node scripts/gradle.mjs installDebug",
+    "icons": "node scripts/make-icons.mjs && npx capacitor-assets generate --android --iconBackgroundColor #1F2430 --iconBackgroundColorDark #1F2430 --splashBackgroundColor #E3E7EA --splashBackgroundColorDark #13161B",
+    "upload-key": "node scripts/make-upload-key.mjs",
+    "store-graphics": "node scripts/store-graphics.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/preferences": "^8.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0",
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/big-shoulders-display": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "puppeteer-core": "^25.16.0"
+  },
+  "private": "true"
+}

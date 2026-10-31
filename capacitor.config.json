@@ -1,0 +1,11 @@
+{
+  "appId": "com.lastcoat.game",
+  "appName": "Last Coat",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}

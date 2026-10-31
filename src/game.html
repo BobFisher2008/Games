@@ -1,0 +1,1862 @@
+<title>Last Coat</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a painter's bench. Reference paint-chip card on the left (stacked above on phones), the primed canvas ringed by its rollers on the right, a tool tray along the bottom. */
+:root {
+  --bg: #E3E7EA;
+  --surface: #F8F9FA;
+  --ink: #1A1E26;
+  --muted: #586170;
+  --line: #C8CED5;
+  --tape: #E8D59D;
+  --tape-ink: #3A311E;
+  --primer: #FDFDFB;
+  --seam: #E2E5E8;
+  --metal: #8B939D;
+  --grip: #2B303A;
+  --focus: #2D5BD0;
+  --gold: #F2B33D;
+  --gold-edge: #B9840F;
+  --gold-ink: #2A1D00;
+  --scrim: rgba(20, 24, 30, .42);
+  --lift: 0 1px 0 rgba(26, 30, 38, .05), 0 14px 32px -18px rgba(26, 30, 38, .38);
+  --font-display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13161B; --surface: #1C2027; --ink: #ECEEF1; --muted: #9AA3AF; --line: #2E343D;
+    --tape: #CDBA82; --tape-ink: #2A2415; --primer: #3A3F48; --seam: #333841; --metal: #737B86; --grip: #C9CED6;
+    --focus: #8AA9FF; --gold: #F2B33D; --gold-edge: #D29A1E; --gold-ink: #2A1D00; --scrim: rgba(0, 0, 0, .6);
+    --lift: 0 1px 0 rgba(0, 0, 0, .4), 0 16px 34px -18px rgba(0, 0, 0, .85);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13161B; --surface: #1C2027; --ink: #ECEEF1; --muted: #9AA3AF; --line: #2E343D;
+  --tape: #CDBA82; --tape-ink: #2A2415; --primer: #3A3F48; --seam: #333841; --metal: #737B86; --grip: #C9CED6;
+  --focus: #8AA9FF; --gold: #F2B33D; --gold-edge: #D29A1E; --gold-ink: #2A1D00; --scrim: rgba(0, 0, 0, .6);
+  --lift: 0 1px 0 rgba(0, 0, 0, .4), 0 16px 34px -18px rgba(0, 0, 0, .85);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.app {
+  height: 100%; max-width: 1060px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 12px;
+}
+
+/* Masthead */
+.masthead { display: flex; align-items: center; gap: 12px; }
+.brand { margin: 0; font-size: inherit; line-height: 1; flex: 0 0 auto; }
+.tape {
+  display: inline-block; position: relative;
+  font-family: var(--font-display); font-weight: 900; font-size: 25px; line-height: 1;
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--tape-ink);
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 2px, transparent 2px 5px),
+    var(--tape);
+  padding: 7px 16px 6px;
+  transform: rotate(-2.2deg);
+  clip-path: polygon(3% 0, 97% 0, 100% 16%, 97.6% 32%, 100% 50%, 97.2% 67%, 99.6% 84%, 97% 100%, 3% 100%, 0 84%, 2.6% 67%, 0 50%, 2.8% 33%, .4% 16%);
+}
+.lvl {
+  display: none; align-items: baseline; gap: 6px;
+  font-family: var(--font-display); font-weight: 700; font-size: 22px;
+  letter-spacing: .03em; text-transform: uppercase; font-variant-numeric: tabular-nums;
+}
+.lvl small { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: 0; text-transform: none; }
+.head-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 16px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface);
+  font-weight: 700; cursor: pointer; touch-action: manipulation;
+}
+.btn:hover:not([disabled]) { border-color: var(--muted); }
+.btn:focus-visible, .chip:focus-visible, .item:focus-visible, .wallet:focus-visible, .card:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.btn[disabled] { opacity: .42; cursor: default; }
+.btn-solid { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn-solid:hover:not([disabled]) { border-color: var(--ink); }
+.btn-gold { background: var(--gold); color: var(--gold-ink); border-color: var(--gold-edge); }
+.btn-gold:hover:not([disabled]) { border-color: var(--gold-ink); }
+.btn-gold .ad { background: var(--gold-ink); color: var(--gold); }
+.btn svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.levels-btn { padding: 0 12px; }
+.levels-btn .lbl { display: none; }
+svg.ic { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.drop-ic { width: 16px; height: 16px; flex: 0 0 auto; }
+.drop-ic path { fill: var(--gold); stroke: var(--gold-edge); stroke-width: 1.5; stroke-linejoin: round; }
+.wallet {
+  position: relative; display: inline-flex; align-items: center; gap: 6px;
+  min-height: 44px; padding: 0 14px 0 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); cursor: pointer;
+  font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums;
+}
+.wallet:hover { border-color: var(--muted); }
+.wallet .drop-ic { width: 18px; height: 18px; }
+.wallet.bump { animation: bump 450ms ease-out; }
+@keyframes bump { 35% { transform: scale(1.12); } }
+.wallet .dot { position: absolute; top: -2px; right: -2px; width: 11px; height: 11px; border-radius: 50%; background: #E0482F; box-shadow: 0 0 0 2px var(--bg); }
+.gain {
+  position: fixed; z-index: 30; pointer-events: none;
+  font-family: var(--font-mono); font-size: 14px; padding: 2px 7px; border-radius: 6px;
+  background: var(--tape); color: var(--tape-ink);
+  transform: translateX(-50%); animation: gain 1.1s ease-out forwards;
+}
+@keyframes gain {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  20% { opacity: 1; transform: translate(-50%, 0); }
+  75% { opacity: 1; }
+  to { opacity: 0; transform: translate(-50%, -8px); }
+}
+
+/* Stage */
+.stage { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+.side { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 14px; align-items: start; }
+.chip-card {
+  margin: 0; padding: 8px 8px 0; border-radius: 5px;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--lift);
+}
+.ref-grid { display: grid; width: 100%; aspect-ratio: var(--ar, 1); }
+.ref-cell { position: relative; background: var(--primer); box-shadow: inset 0 0 0 .5px var(--seam); }
+.ref-cell[data-c] { box-shadow: none; }
+.chip-card figcaption { display: grid; gap: 1px; padding: 7px 0 9px; }
+.chip-code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.chip-name { font-family: var(--font-display); font-weight: 700; font-size: 16px; line-height: 1.05; letter-spacing: .04em; text-transform: uppercase; }
+.chip-dims { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.swatches { list-style: none; margin: 5px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.swatches li { width: 13px; height: 13px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+
+.panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.panel-lvl { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1; letter-spacing: .03em; text-transform: uppercase; }
+.panel-lvl small { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0; text-transform: none; margin-left: 4px; }
+.stats { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.stats div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px 6px; min-width: 0; }
+.stats dt { font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.stats dd { margin: 0; font-family: var(--font-mono); font-size: 18px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.tip { margin: 0; font-size: 14px; max-width: 44ch; }
+
+.board-wrap { position: relative; flex: 1 1 auto; min-height: 300px; overflow: hidden; }
+.board { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; }
+
+.frame {
+  z-index: 0; border-radius: 2px; background: var(--primer);
+  box-shadow: 0 0 0 6px var(--frame-ring, var(--surface)), 0 0 0 7px var(--frame-edge, var(--line)), var(--lift);
+}
+.cell { position: relative; z-index: 1; overflow: hidden; background: var(--primer); box-shadow: inset 0 0 0 .5px var(--seam); }
+.cell[data-c] { box-shadow: none; }
+.coat { position: absolute; inset: 0; z-index: 3; }
+.cell[data-dir="h"]::after, .coat[data-dir="h"]::after,
+.cell[data-dir="v"]::after, .coat[data-dir="v"]::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(var(--grain, 180deg), rgba(255,255,255,.1) 0 1px, transparent 1px 3px, rgba(0,0,0,.06) 3px 4px, transparent 4px 7px);
+}
+.cell[data-dir="v"], .coat[data-dir="v"] { --grain: 90deg; }
+
+.symbols .cell[data-glyph]::before, .symbols .ref-cell[data-glyph]::before {
+  content: attr(data-glyph); position: absolute; inset: 0; display: grid; place-items: center;
+  color: var(--gi); line-height: 1;
+}
+.symbols .cell[data-glyph]::before { font-size: calc(var(--cell) * .3); }
+.symbols .ref-cell[data-glyph]::before { font-size: 8px; }
+
+.sheen { z-index: 4; position: relative; overflow: hidden; pointer-events: none; }
+.sheen::after {
+  content: ""; position: absolute; inset: -30%;
+  background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.6) 50%, transparent 62%);
+  transform: translateX(-130%);
+}
+.board.won .sheen::after { animation: sheen 900ms ease-out forwards; }
+@keyframes sheen { to { transform: translateX(130%); } }
+
+/* Rollers */
+.rigsvg .grip { fill: var(--skin-grip, var(--grip)); }
+.rigsvg .wire { fill: none; stroke: var(--skin-metal, var(--metal)); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+.rigsvg .cap { fill: var(--skin-metal, var(--metal)); }
+.rigsvg .nap { fill: var(--paint); }
+.rigsvg .shine { fill: #fff; opacity: .3; }
+.rigsvg .fuzz { fill: none; stroke: #000; stroke-opacity: .16; stroke-width: 4; stroke-dasharray: 2 3; }
+.roller {
+  position: relative; z-index: 2; margin: 0; padding: 0; border: 0; border-radius: 10px;
+  background: transparent; cursor: pointer; touch-action: manipulation;
+}
+.roller[data-side="T"] { --rot: 0deg; }
+.roller[data-side="B"] { --rot: 180deg; }
+.roller[data-side="L"] { --rot: -90deg; }
+.roller[data-side="R"] { --rot: 90deg; }
+.roller .rig {
+  position: absolute; left: 50%; top: 50%; width: var(--cell); height: var(--slot);
+  transform: translate(-50%, -50%) rotate(var(--rot));
+  transition: transform 140ms ease-out; pointer-events: none;
+}
+.roller .rigsvg { display: block; width: 100%; height: 100%; overflow: visible; }
+.roller .gl {
+  position: absolute; left: 50%; top: 76%; display: none; line-height: 1;
+  transform: translate(-50%, -50%) rotate(calc(var(--rot) * -1));
+  font-size: calc(var(--cell) * .22); color: var(--gi);
+}
+.symbols .roller:not(.spent) .gl { display: block; }
+@media (hover: hover) {
+  .roller:not(.spent):hover .rig { transform: translate(-50%, -50%) rotate(var(--rot)) translateY(6%); }
+}
+.roller:not(.spent):active .rig { transform: translate(-50%, -50%) rotate(var(--rot)) scale(.92); }
+.roller:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.roller.firing { z-index: 6; }
+.roller.spent { cursor: default; }
+.roller.spent .rigsvg .nap { fill: none; stroke: var(--metal); stroke-width: 2.5; stroke-dasharray: 5 4; }
+.roller.spent .rigsvg .shine, .roller.spent .rigsvg .fuzz { display: none; }
+.roller.spent .rigsvg .grip, .roller.spent .rigsvg .wire, .roller.spent .rigsvg .cap { opacity: .35; }
+.roller.hinted::after {
+  content: ""; position: absolute; inset: 1px; border-radius: 12px;
+  border: 3px solid var(--focus); animation: ring 1.1s ease-in-out infinite;
+}
+@keyframes ring { 50% { transform: scale(1.08); opacity: .45; } }
+
+/* Tray */
+.tray { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tool { flex-direction: column; gap: 3px; min-height: 58px; padding: 6px 4px; font-size: 13px; }
+.tool svg.ic { width: 21px; height: 21px; }
+.tool .row { display: inline-flex; align-items: center; gap: 6px; }
+.cost { display: inline-flex; align-items: center; gap: 2px; font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; }
+.cost .drop-ic { width: 12px; height: 12px; }
+.ad {
+  font-family: var(--font-mono); font-size: 9.5px; line-height: 1; padding: 2px 4px 1px; border-radius: 3px;
+  background: var(--tape); color: var(--tape-ink); letter-spacing: .04em; font-weight: 500;
+}
+.tool[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.note { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
+.note kbd { font-family: var(--font-mono); font-size: 11px; padding: 0 4px; border: 1px solid var(--line); border-radius: 4px; }
+
+/* Sheets */
+.sheet {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+  background: var(--scrim);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.sheet-card {
+  width: min(100%, 400px); max-height: 100%; overflow: auto;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 14px; padding: 20px; box-shadow: var(--lift);
+  animation: rise 220ms ease-out;
+}
+@keyframes rise { from { transform: translateY(12px); opacity: 0; } }
+.sheet h2 {
+  margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 36px; line-height: 1;
+  letter-spacing: .03em; text-transform: uppercase; text-wrap: balance;
+}
+.sheet h3 { margin: 4px 0 0; font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: .04em; text-transform: uppercase; }
+.eyebrow { margin: 0; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sheet-sub { margin: 0; color: var(--muted); font-size: 14px; }
+
+.win-card { display: grid; gap: 10px; text-align: center; justify-items: center; }
+.win-art { display: grid; width: 96px; aspect-ratio: var(--ar, 1); box-shadow: 0 0 0 5px var(--bg), 0 0 0 6px var(--line); margin: 6px 0 4px; }
+.win-art span { background: var(--primer); }
+.stars { display: flex; gap: 6px; justify-content: center; }
+.star { width: 30px; height: 30px; fill: none; stroke: var(--line); stroke-width: 1.6; stroke-linejoin: round; }
+.star.on { fill: var(--gold); stroke: var(--gold-edge); }
+.win-stats { margin: 0; font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); }
+.win-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; width: 100%; margin-top: 4px; }
+
+.reward { width: 100%; display: grid; gap: 8px; justify-items: center; padding: 12px; border-radius: 10px; background: var(--bg); }
+.reward-total { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 900; font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; }
+.reward-total .drop-ic { width: 26px; height: 26px; }
+.reward-break { margin: 0; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.choice { display: grid; grid-template-columns: 1fr 1.35fr; gap: 8px; width: 100%; }
+.choice .btn { flex-direction: column; gap: 2px; min-height: 54px; padding: 6px 8px; line-height: 1.15; }
+.choice small { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-weight: 500; font-size: 11.5px; }
+.claimed { margin: 0; font-weight: 700; font-size: 14px; }
+.milestone-note { width: 100%; margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--tape); color: var(--tape-ink); font-weight: 700; font-size: 14px; }
+
+.can-line {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px 9px 12px;
+  border-radius: 10px; border: 1px dashed var(--line); text-align: left; font-size: 14px;
+}
+.can-line > span { flex: 1; min-width: 0; }
+.can-line small { display: block; color: var(--muted); font-size: 12px; }
+.can-line .btn { min-height: 38px; flex: 0 0 auto; }
+.can-ic { width: 24px; height: 24px; flex: 0 0 auto; }
+.segs { display: inline-flex; gap: 3px; vertical-align: middle; margin: 0 6px; }
+.segs i { width: 16px; height: 8px; border-radius: 2px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.segs i.on { background: var(--gold); box-shadow: inset 0 0 0 1px var(--gold-edge); }
+
+.track-box { width: 100%; display: grid; gap: 7px; text-align: left; }
+.track-head { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.track-num { font-family: var(--font-mono); letter-spacing: 0; color: var(--ink); font-size: 12px; }
+.track-bar { position: relative; height: 8px; margin: 3px 6px; border-radius: 999px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.track-bar > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--gold); }
+.track-bar i { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); background: var(--surface); border: 2px solid var(--line); }
+.track-bar i.got { background: var(--gold); border-color: var(--gold-edge); }
+.track-next { margin: 0; font-size: 13px; }
+.track-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.track-list li { font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.track-list li.got { background: var(--gold); border-color: var(--gold-edge); color: var(--gold-ink); }
+
+.levels-card { width: min(100%, 580px); display: grid; gap: 14px; }
+.level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; }
+.chip {
+  display: grid; gap: 6px; padding: 6px 6px 7px; text-align: left; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 5px;
+}
+.chip:hover { border-color: var(--muted); }
+.chip.current { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.chip-art {
+  display: grid; place-items: center; aspect-ratio: 1; width: 100%;
+  background: var(--bg); border-radius: 2px;
+  font-family: var(--font-display); font-weight: 900; font-size: 30px; color: var(--muted);
+}
+.chip.next .chip-art { background: var(--tape); color: var(--tape-ink); }
+.chip-art.done { place-items: stretch; background: var(--primer); }
+.chip-art.done span { background: var(--primer); }
+.chip-meta { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.chip-meta .chip-code { font-size: 10.5px; }
+.chip-meta .stars { gap: 1px; }
+.chip-meta .star { width: 12px; height: 12px; stroke-width: 2; }
+.endless { justify-content: space-between; width: 100%; }
+.endless small { font-family: var(--font-mono); font-weight: 500; color: var(--muted); font-size: 12px; }
+
+.studio-card { width: min(100%, 560px); display: grid; gap: 14px; }
+.balance-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; padding: 10px 12px; border-radius: 10px; background: var(--bg); }
+.balance-row strong { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 20px; font-weight: 500; }
+.balance-row strong .drop-ic { width: 20px; height: 20px; }
+.inv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; font-size: 14px; }
+.inv b { font-family: var(--font-mono); font-weight: 500; }
+.inv small { color: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+.inv .btn { min-height: 36px; margin-left: auto; }
+.daily-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--line); font-size: 14px; }
+.daily-row .btn { min-height: 38px; flex: 0 0 auto; }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+.item {
+  display: grid; gap: 6px; justify-items: center; padding: 10px 8px; text-align: center; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+}
+.item:hover { border-color: var(--muted); }
+.item.equipped { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.item.locked { cursor: default; }
+.item.locked .item-art { opacity: .55; }
+.item-art { width: 64px; height: 56px; display: grid; place-items: center; }
+.item-art .rigsvg { width: 64px; height: 55px; overflow: visible; }
+.frame-art {
+  width: 40px; height: 40px;
+  background: linear-gradient(90deg, #E0482F 0 34%, #F2B33D 34% 67%, #2D5BD0 67%);
+  box-shadow: 0 0 0 5px var(--ring), 0 0 0 6px var(--edge);
+}
+.set-art { display: grid; grid-template-columns: repeat(3, 15px); grid-template-rows: repeat(2, 15px); gap: 3px; }
+.set-art i { border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); }
+.item-name { font-weight: 700; font-size: 14px; }
+.item-status { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.item.equipped .item-status { color: var(--ink); }
+.studio-msg { margin: 0; min-height: 1.45em; font-size: 14px; }
+.testing { border-top: 1px solid var(--line); padding-top: 12px; }
+.testing summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+.testing-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 8px; }
+.testing-row .btn { min-height: 38px; font-size: 14px; }
+.settings { display: grid; gap: 8px; }
+.toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+  min-height: 48px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); cursor: pointer; font-weight: 700; text-align: left;
+}
+.toggle:hover { border-color: var(--muted); }
+.toggle:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.toggle .sw { position: relative; flex: 0 0 auto; width: 44px; height: 26px; border-radius: 999px; background: var(--line); transition: background 150ms; }
+.toggle .sw::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .3); transition: transform 150ms;
+}
+.toggle[aria-pressed="true"] .sw { background: var(--ink); }
+.toggle[aria-pressed="true"] .sw::after { transform: translateX(18px); }
+a.toggle { color: inherit; text-decoration: none; }
+.toggle .ext { color: var(--muted); font-size: 18px; padding-right: 4px; }
+
+.daily-card { width: min(100%, 470px); display: grid; gap: 12px; text-align: center; justify-items: center; }
+.days { list-style: none; margin: 4px 0 0; padding: 0; width: 100%; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.days li {
+  display: grid; gap: 4px; justify-items: center; align-content: start; padding: 8px 2px 9px;
+  border-radius: 8px; border: 1px solid var(--line); background: var(--bg);
+}
+.days .d-num { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.days .d-amt { font-family: var(--font-display); font-weight: 900; font-size: 18px; line-height: 1; font-variant-numeric: tabular-nums; }
+.days .d-extra { font-family: var(--font-mono); font-size: 10px; line-height: 1; }
+.days .d-check { font-size: 16px; line-height: 16px; height: 16px; color: var(--muted); }
+.days li.done { opacity: .6; }
+.days li.today { background: var(--tape); color: var(--tape-ink); border-color: var(--gold-edge); transform: translateY(-3px); }
+.days li.today .d-num { color: var(--tape-ink); }
+.days li.big { border-style: dashed; border-color: var(--gold-edge); }
+.daily-card .win-actions { margin-top: 2px; }
+
+.can-card { width: min(100%, 540px); display: grid; gap: 12px; text-align: center; justify-items: center; }
+.cards { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.card {
+  display: grid; gap: 6px; justify-items: center; align-content: start; min-width: 0;
+  padding: 10px 6px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+  cursor: pointer; transition: transform 140ms ease-out, border-color 140ms;
+}
+.card:hover:not([disabled]) { border-color: var(--muted); transform: translateY(-2px); }
+.card[disabled] { cursor: default; }
+.card .tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.card .card-art { height: 58px; display: grid; place-items: center; }
+.card .card-art .drop-ic { width: 40px; height: 40px; }
+.card .card-art svg.ic { width: 40px; height: 40px; stroke-width: 1.7; }
+.card .card-title { font-weight: 700; font-size: 14px; line-height: 1.2; }
+.card .card-desc { font-size: 12px; line-height: 1.3; color: var(--muted); }
+.card.picked { background: var(--tape); color: var(--tape-ink); border-color: var(--gold-edge); box-shadow: inset 0 0 0 1px var(--gold-edge); }
+.card.picked .tag, .card.picked .card-desc { color: var(--tape-ink); }
+.card.passed { opacity: .45; }
+.can-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+.can-actions.single { grid-template-columns: 1fr; }
+
+.ad-sheet { z-index: 22; }
+.ad-card { display: grid; gap: 10px; justify-items: center; text-align: center; }
+.ad-count { font-family: var(--font-display); font-weight: 900; font-size: 68px; line-height: 1; font-variant-numeric: tabular-nums; }
+.ad-bar { width: 100%; height: 6px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+.ad-bar span { display: block; height: 100%; width: 0; background: var(--ink); }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 25;
+  transform: translateX(-50%); width: min(calc(100% - 32px), 460px);
+  display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px;
+  background: var(--ink); color: var(--bg); border-radius: 12px; box-shadow: var(--lift);
+  animation: rise 200ms ease-out;
+}
+.toast p { margin: 0; flex: 1; font-size: 14px; }
+.toast .btn { min-height: 38px; background: var(--bg); color: var(--ink); border-color: transparent; flex: 0 0 auto; }
+
+@media (max-width: 559px) {
+  .panel-lvl { display: block; }
+  .card .card-desc { font-size: 11px; }
+}
+@media (min-width: 560px) {
+  .panel-lvl { display: none; }
+  .lvl { display: flex; margin-left: auto; }
+  .head-actions { margin-left: 8px; }
+  .levels-btn .lbl { display: inline; }
+  .tape { font-size: 28px; }
+}
+@media (min-width: 760px) {
+  .app { padding-block: 22px 16px; gap: 18px; }
+  .tape { font-size: 32px; }
+  .stage { display: grid; grid-template-columns: 236px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 32px; }
+  .side { display: flex; flex-direction: column; gap: 16px; }
+  .chip-card { padding: 10px 10px 0; }
+  .chip-name { font-size: 20px; }
+  .board-wrap { min-height: 380px; }
+  .tray { width: 100%; max-width: 560px; margin-left: calc(236px + 32px); }
+  .note { text-align: left; margin-left: calc(236px + 32px); }
+}
+@media (min-width: 760px) and (max-width: 900px) {
+  .tray, .note { margin-left: auto; margin-right: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .roller.hinted::after, .sheet-card, .toast, .wallet.bump, .gain { animation: none; }
+  .board.won .sheen::after { animation: none; }
+  .roller .rig, .card { transition: none; }
+  .days li.today, .card:hover:not([disabled]) { transform: none; }
+}
+</style>
+
+<div class="app" id="app">
+  <header class="masthead">
+    <h1 class="brand"><span class="tape">Last Coat</span></h1>
+    <div class="lvl" aria-live="polite"><span id="lvl-label">Level 1</span><small id="lvl-of">/ 20</small></div>
+    <div class="head-actions">
+      <button class="wallet" id="btn-wallet" type="button" aria-label="Studio">
+        <svg class="drop-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.6 4.4 6.5 8.2 6.5 11.6a6.5 6.5 0 0 1-13 0C5.5 10.7 8.4 6.9 12 2.5z"/></svg>
+        <span id="drops">0</span>
+        <span class="dot" id="wallet-dot" hidden></span>
+      </button>
+      <button class="btn levels-btn" id="btn-levels" type="button" aria-label="Levels">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></svg>
+        <span class="lbl">Levels</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <aside class="side" aria-label="Reference and progress">
+      <figure class="chip-card">
+        <div class="ref-grid" id="ref" role="img" aria-label="Reference pattern to match"></div>
+        <figcaption>
+          <span class="chip-code" id="chip-code">LC-001</span>
+          <span class="chip-name">Reference</span>
+          <span class="chip-dims" id="chip-dims">3 × 3</span>
+          <ul class="swatches" id="chip-swatches" aria-label="Paints in this canvas"></ul>
+        </figcaption>
+      </figure>
+      <div class="panel">
+        <p class="panel-lvl"><span id="panel-lvl">Level 1</span><small id="panel-of">/ 20</small></p>
+        <dl class="stats">
+          <div><dt>Coats</dt><dd id="st-coats">0</dd></div>
+          <div><dt>Rollers left</dt><dd id="st-left">0</dd></div>
+          <div><dt>Undos</dt><dd id="st-undos">0</dd></div>
+          <div><dt>Hints</dt><dd id="st-hints">0</dd></div>
+        </dl>
+        <p class="tip" id="tip"></p>
+      </div>
+    </aside>
+    <section class="board-wrap" id="board-wrap" aria-label="Canvas">
+      <div class="board" id="board"></div>
+    </section>
+  </div>
+
+  <nav class="tray" aria-label="Tools">
+    <button class="btn tool" id="btn-undo" type="button">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
+      <span>Undo</span>
+    </button>
+    <button class="btn tool" id="btn-restart" type="button">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      <span>Restart</span>
+    </button>
+    <button class="btn tool" id="btn-hint" type="button" aria-label="Hint">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg>
+      <span class="row">Hint <span class="cost" id="hint-cost"></span></span>
+    </button>
+    <button class="btn tool" id="btn-symbols" type="button" aria-pressed="false">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="3"/><path d="M17 4l3.5 6h-7z"/><path d="M4 14h6v6H4z"/><path d="M17 14l3 3-3 3-3-3z"/></svg>
+      <span>Symbols</span>
+    </button>
+  </nav>
+  <p class="note" id="note">Prototype build. Buttons marked <span class="ad">AD</span> play a pretend rewarded ad. Keys: <kbd>Z</kbd> undo, <kbd>R</kbd> restart, <kbd>H</kbd> hint.</p>
+</div>
+
+<div class="sheet" id="win" hidden role="dialog" aria-modal="true" aria-labelledby="win-title">
+  <div class="sheet-card win-card">
+    <div class="win-art" id="win-art" aria-hidden="true"></div>
+    <p class="eyebrow" id="win-code">LC-001</p>
+    <h2 id="win-title">Clean finish</h2>
+    <div class="stars" id="win-stars"></div>
+    <p class="win-stats" id="win-stats"></p>
+    <div class="reward">
+      <div class="reward-total">
+        <svg class="drop-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.6 4.4 6.5 8.2 6.5 11.6a6.5 6.5 0 0 1-13 0C5.5 10.7 8.4 6.9 12 2.5z"/></svg>
+        <span id="win-gain">+0</span>
+      </div>
+      <p class="reward-break" id="win-break"></p>
+      <div class="choice" id="win-choice">
+        <button class="btn" id="btn-skip" type="button">Skip<small id="skip-amt">take 0</small></button>
+        <button class="btn btn-gold" id="btn-double" type="button" data-autofocus>Double it<small><span id="double-amt">0</span> drops <span class="ad">AD</span></small></button>
+      </div>
+      <p class="claimed" id="win-claimed" role="status" hidden></p>
+    </div>
+    <div class="can-line" id="win-can"></div>
+    <p class="milestone-note" id="win-milestone" hidden></p>
+    <div class="track-box" id="win-track"></div>
+    <div class="win-actions" id="win-actions" hidden>
+      <button class="btn" id="btn-replay" type="button">Replay</button>
+      <button class="btn btn-solid" id="btn-next" type="button">Next canvas</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="levels" hidden role="dialog" aria-modal="true" aria-labelledby="levels-title">
+  <div class="sheet-card levels-card">
+    <div class="sheet-head">
+      <h2 id="levels-title">Canvases</h2>
+      <button class="btn" id="btn-close-levels" type="button" data-autofocus>Close</button>
+    </div>
+    <div class="track-box" id="levels-track"></div>
+    <div class="level-grid" id="level-grid"></div>
+    <button class="btn endless" id="btn-endless" type="button"><span>Endless mode: generated canvases</span><small id="endless-count">0 finished</small></button>
+    <p class="sheet-sub" id="levels-test-note">All 20 canvases are open while you test.</p>
+  </div>
+</div>
+
+<div class="sheet" id="studio" hidden role="dialog" aria-modal="true" aria-labelledby="studio-title">
+  <div class="sheet-card studio-card">
+    <div class="sheet-head">
+      <h2 id="studio-title">Studio</h2>
+      <button class="btn" id="btn-close-studio" type="button" data-autofocus>Close</button>
+    </div>
+    <div class="balance-row">
+      <span>Your paint drops</span>
+      <strong><svg class="drop-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.6 4.4 6.5 8.2 6.5 11.6a6.5 6.5 0 0 1-13 0C5.5 10.7 8.4 6.9 12 2.5z"/></svg><span id="studio-drops">0</span></strong>
+    </div>
+    <div class="inv" id="studio-inv"></div>
+    <div class="daily-row" id="studio-daily"></div>
+    <p class="studio-msg" id="studio-msg" role="status"></p>
+    <h3>Paint sets</h3>
+    <div class="items" id="items-paints"></div>
+    <h3>Roller handles</h3>
+    <div class="items" id="items-handle"></div>
+    <h3>Canvas frames</h3>
+    <div class="items" id="items-frame"></div>
+    <h3>Settings</h3>
+    <div class="settings">
+      <button class="toggle" id="btn-sound" type="button" aria-pressed="true">Sound <span class="sw" aria-hidden="true"></span></button>
+      <button class="toggle" id="btn-haptics" type="button" aria-pressed="true">Vibration <span class="sw" aria-hidden="true"></span></button>
+      <a class="toggle" id="privacy-link" href="https://bobfisher2008.github.io/Games/last-coat/privacy.html" target="_blank" rel="noopener">Privacy policy <span class="ext" aria-hidden="true">↗</span></a>
+    </div>
+    <p class="sheet-sub">Drops come from finishing canvases and the daily gift. Stars unlock milestone rewards. Some items only turn up in paint cans.</p>
+    <details class="testing">
+      <summary>Testing tools</summary>
+      <div class="testing-row">
+        <button class="btn" id="btn-nextday" type="button">Skip to tomorrow</button>
+        <button class="btn" id="btn-add" type="button">Add 100 drops</button>
+        <button class="btn" id="btn-fillcan" type="button">Add a paint can</button>
+        <button class="btn" id="btn-reset" type="button">Reset progress</button>
+      </div>
+      <p class="sheet-sub" id="ads-count"></p>
+    </details>
+  </div>
+</div>
+
+<div class="sheet" id="daily" hidden role="dialog" aria-modal="true" aria-labelledby="daily-title">
+  <div class="sheet-card daily-card">
+    <p class="eyebrow">Come back each day</p>
+    <h2 id="daily-title">Daily gift</h2>
+    <ol class="days" id="days"></ol>
+    <p class="sheet-sub" id="daily-sub"></p>
+    <div class="win-actions" id="daily-actions">
+      <button class="btn" id="btn-daily-double" type="button">Collect ×2 <span class="ad">AD</span></button>
+      <button class="btn btn-solid" id="btn-daily" type="button" data-autofocus>Collect</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="cansheet" hidden role="dialog" aria-modal="true" aria-labelledby="can-title">
+  <div class="sheet-card can-card">
+    <p class="eyebrow">Paint can</p>
+    <h2 id="can-title">Pick one</h2>
+    <p class="sheet-sub" id="can-sub"></p>
+    <div class="cards" id="can-cards"></div>
+    <div class="can-actions" id="can-actions" hidden>
+      <button class="btn btn-gold" id="btn-can-extra" type="button">Pick one more <span class="ad">AD</span></button>
+      <button class="btn btn-solid" id="btn-can-done" type="button">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet ad-sheet" id="adsheet" hidden role="dialog" aria-modal="true" aria-labelledby="ad-title">
+  <div class="sheet-card ad-card">
+    <p class="eyebrow">Rewarded ad · prototype</p>
+    <h2 id="ad-title">Ad playing</h2>
+    <div class="ad-count" id="ad-count" aria-live="off">3</div>
+    <div class="ad-bar"><span id="ad-fill"></span></div>
+    <p class="sheet-sub" id="ad-for"></p>
+    <p class="sheet-sub">In the real game a 15 to 30 second video plays here.</p>
+    <button class="btn" id="btn-ad-cancel" type="button" data-autofocus>Close without reward</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden>
+  <p id="toast-msg"></p>
+  <button class="btn" id="toast-act" type="button">Undo</button>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+// CORE-START
+const PAINTS = [
+  { name: "Vermilion", hex: "#E0482F", glyph: "●", ink: "#FFFFFF" },
+  { name: "Saffron",   hex: "#F2B33D", glyph: "▲", ink: "#2A1D00" },
+  { name: "Cobalt",    hex: "#2D5BD0", glyph: "■", ink: "#FFFFFF" },
+  { name: "Viridian",  hex: "#16936B", glyph: "◆", ink: "#FFFFFF" },
+  { name: "Plum",      hex: "#7D3C98", glyph: "✚", ink: "#FFFFFF" },
+  { name: "Blush",     hex: "#F28DB2", glyph: "▼", ink: "#3A0A1E" }
+];
+
+const LEVELS = [
+  { r: 3, c: 3, used: 2,  dec: 0, k: 2, depth: 2, tip: "Tap a roller to paint its whole row or column. Make the canvas match the reference card." },
+  { r: 3, c: 3, used: 3,  dec: 0, k: 3, depth: 2, tip: "Each coat covers whatever is under it. The last coat wins." },
+  { r: 3, c: 3, used: 4,  dec: 0, k: 3, depth: 3, tip: "Work backwards. A line that shows only its own color in the reference went on after everything crossing it." },
+  { r: 4, c: 4, used: 4,  dec: 0, k: 3, depth: 3, tip: "Bigger canvas, same rule. Find the last coat first." },
+  { r: 4, c: 4, used: 5,  dec: 0, k: 3, depth: 4 },
+  { r: 4, c: 4, used: 5,  dec: 1, k: 3, depth: 3, tip: "Not every roller belongs. One of these would ruin the canvas." },
+  { r: 4, c: 4, used: 6,  dec: 0, k: 4, depth: 4 },
+  { r: 4, c: 5, used: 6,  dec: 1, k: 4, depth: 4 },
+  { r: 5, c: 5, used: 6,  dec: 1, k: 4, depth: 5 },
+  { r: 5, c: 5, used: 7,  dec: 1, k: 4, depth: 5, both: true, opp: true, tip: "Two rollers can share a line. Only one of them has the color the reference shows." },
+  { r: 5, c: 5, used: 7,  dec: 2, k: 4, depth: 5, both: true },
+  { r: 5, c: 5, used: 8,  dec: 2, k: 5, depth: 6, both: true },
+  { r: 5, c: 6, used: 8,  dec: 2, k: 5, depth: 6, both: true },
+  { r: 6, c: 6, used: 8,  dec: 2, k: 5, depth: 6, both: true, tip: "Six by six. Nothing is timed, so take it one line at a time." },
+  { r: 6, c: 6, used: 9,  dec: 2, k: 5, depth: 7, both: true },
+  { r: 6, c: 6, used: 10, dec: 2, k: 5, depth: 7, both: true },
+  { r: 6, c: 6, used: 10, dec: 3, k: 6, depth: 7, both: true },
+  { r: 6, c: 6, used: 11, dec: 2, k: 6, depth: 8, both: true },
+  { r: 6, c: 6, used: 11, dec: 3, k: 6, depth: 8, both: true },
+  { r: 6, c: 6, used: 11, dec: 4, k: 6, depth: 9, both: true, tip: "Last canvas in this set. After this, endless mode generates new ones." }
+];
+const seedForLevel = (idx) => 7349 + idx * 104729;
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Cells a roller paints, in the order it reaches them.
+function lineCells(L, ro) {
+  const out = [];
+  if (ro.side === "L" || ro.side === "R") {
+    for (let j = 0; j < L.c; j++) out.push(ro.line * L.c + j);
+  } else {
+    for (let i = 0; i < L.r; i++) out.push(i * L.c + ro.line);
+  }
+  if (ro.side === "R" || ro.side === "B") out.reverse();
+  return out;
+}
+
+// Finds an order of unused rollers that turns `board` into `target`, or null.
+// Works backwards: a roller can go last if every cell it covers already shows its color.
+function planSolve(L, target, rollers, board, used) {
+  const N = L.r * L.c;
+  const cellsOf = rollers.map((ro) => lineCells(L, ro));
+  const free = new Uint8Array(N);
+  const picked = [];
+  const taken = new Set();
+  let progress = true;
+  while (progress) {
+    progress = false;
+    for (let i = 0; i < rollers.length; i++) {
+      if (used.has(i) || taken.has(i)) continue;
+      let live = false, ok = true;
+      for (const k of cellsOf[i]) {
+        if (free[k]) continue;
+        live = true;
+        if (target[k] !== rollers[i].color) { ok = false; break; }
+      }
+      if (!live || !ok) continue;
+      picked.push(i); taken.add(i);
+      for (const k of cellsOf[i]) free[k] = 1;
+      progress = true;
+    }
+  }
+  for (let k = 0; k < N; k++) if (!free[k] && board[k] !== target[k]) return null;
+  const fwd = picked.reverse();
+  const later = new Uint8Array(N);
+  const keep = [];
+  for (let i = fwd.length - 1; i >= 0; i--) {
+    const cells = cellsOf[fwd[i]];
+    if (!cells.every((k) => later[k])) keep.push(fwd[i]);
+    for (const k of cells) later[k] = 1;
+  }
+  return keep.reverse();
+}
+
+// Builds a level by painting a random roller sequence onto a blank canvas.
+// The result is solvable by construction; the checks keep it interesting.
+function generate(p, seed) {
+  const rng = mulberry32(seed);
+  const ri = (n) => Math.floor(rng() * n);
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = ri(i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+  const R = p.r, C = p.c, N = R * C, lvl = { r: R, c: C };
+  for (let attempt = 0; attempt < 1500; attempt++) {
+    const needDepth = attempt < 600 ? p.depth : attempt < 1100 ? p.depth - 1 : Math.min(2, p.depth);
+    const needDecoys = attempt < 1300 ? p.dec : 0;
+    const palette = shuffle([0, 1, 2, 3, 4, 5]).slice(0, p.k);
+    const rowSide = [], colSide = [];
+    for (let i = 0; i < R; i++) rowSide.push(rng() < 0.5 ? "L" : "R");
+    for (let j = 0; j < C; j++) colSide.push(rng() < 0.5 ? "T" : "B");
+    const rows = shuffle([...Array(R).keys()]), cols = shuffle([...Array(C).keys()]);
+    const total = Math.min(p.used, R + C);
+    const seq = [];
+    let kind = rng() < 0.5 ? "row" : "col", lastColor = -1;
+    while (seq.length < total) {
+      if (seq.length) kind = rng() < 0.8 ? (kind === "row" ? "col" : "row") : kind;
+      if (kind === "row" && !rows.length) kind = "col";
+      if (kind === "col" && !cols.length) kind = "row";
+      const line = kind === "row" ? rows.pop() : cols.pop();
+      let color = palette[ri(palette.length)];
+      if (palette.length > 1) while (color === lastColor) color = palette[ri(palette.length)];
+      seq.push({ kind, line, side: kind === "row" ? rowSide[line] : colSide[line], color });
+      lastColor = color;
+    }
+    const target = new Array(N).fill(-1), owner = new Array(N).fill(-1);
+    seq.forEach((ro, idx) => { for (const k of lineCells(lvl, ro)) { target[k] = ro.color; owner[k] = idx; } });
+    const seen = new Set(owner);
+    if (seq.some((_, idx) => !seen.has(idx))) continue;
+    const depth = seq.map(() => 1);
+    for (let b = 0; b < seq.length; b++) for (let a = 0; a < b; a++) {
+      if (seq[a].kind !== seq[b].kind && seq[a].color !== seq[b].color && depth[a] + 1 > depth[b]) depth[b] = depth[a] + 1;
+    }
+    if (Math.max(...depth) < needDepth) continue;
+    if (new Set(target.filter((x) => x >= 0)).size < Math.min(2, p.k)) continue;
+
+    const rollers = seq.map((s) => ({ kind: s.kind, line: s.line, side: s.side, color: s.color }));
+    const partnerOf = (k, line) => rollers.find((r) => r.kind === k && r.line === line);
+    const pool = [];
+    for (let i = 0; i < R; i++) for (const side of ["L", "R"]) pool.push({ kind: "row", line: i, side });
+    for (let j = 0; j < C; j++) for (const side of ["T", "B"]) pool.push({ kind: "col", line: j, side });
+    const cands = shuffle(pool.filter((c) => {
+      const pt = partnerOf(c.kind, c.line);
+      return pt ? (p.both && pt.side !== c.side) : true;
+    }));
+    if (p.opp) cands.sort((a, b) => (partnerOf(b.kind, b.line) ? 1 : 0) - (partnerOf(a.kind, a.line) ? 1 : 0));
+    const decoys = [];
+    for (const c of cands) {
+      if (decoys.length >= needDecoys) break;
+      if (decoys.some((d) => d.kind === c.kind && d.line === c.line)) continue;
+      const pt = partnerOf(c.kind, c.line);
+      const choices = palette.filter((x) => !pt || x !== pt.color);
+      if (!choices.length) continue;
+      const d = { kind: c.kind, line: c.line, side: c.side, color: choices[ri(choices.length)] };
+      if (!pt) {
+        // A decoy on an empty line must be unrecoverable even if used first.
+        const board = new Array(N).fill(-1);
+        for (const k of lineCells(lvl, d)) board[k] = d.color;
+        const all = rollers.concat(decoys, [d]);
+        if (planSolve(lvl, target, all, board, new Set([all.length - 1])) !== null) continue;
+      }
+      decoys.push(d);
+    }
+    if (decoys.length < needDecoys) continue;
+    const order = { T: 0, L: 1, R: 1, B: 2 };
+    const all = rollers.concat(decoys).sort((a, b) =>
+      order[a.side] - order[b.side] || a.line - b.line || (a.side < b.side ? -1 : 1));
+    return { r: R, c: C, rollers: all, target, decoys: decoys.length };
+  }
+  return null;
+}
+// CORE-END
+
+/* ---------- Reward economy (all numbers in one place) ---------- */
+const HINT_COST = 20;
+const CAN_SIZE = 3;                               // new canvases finished per paint can
+const DAILY = [20, 30, 40, 50, 60, 80, 150];       // day 7 also adds a paint can
+const MILESTONES = [
+  { at: 6,  drops: 40,  label: "40 drops" },
+  { at: 15, drops: 0,   unlock: ["frame", "oak"],    label: "Oak frame" },
+  { at: 30, drops: 50,  unlock: ["handle", "brass"], label: "Brass handle + 50 drops" },
+  { at: 45, drops: 150, label: "150 drops" },
+  { at: 60, drops: 0,   unlock: ["frame", "gilt"],   label: "Gilt frame" }
+];
+const PAINT_SETS = {
+  classic: [["Vermilion", "#E0482F", "#FFFFFF"], ["Saffron", "#F2B33D", "#2A1D00"], ["Cobalt", "#2D5BD0", "#FFFFFF"], ["Viridian", "#16936B", "#FFFFFF"], ["Plum", "#7D3C98", "#FFFFFF"], ["Blush", "#F28DB2", "#3A0A1E"]],
+  pastel:  [["Coral", "#F2877A", "#3A1410"], ["Butter", "#F4D35E", "#3A2E00"], ["Sky", "#7FB2F0", "#0F2440"], ["Mint", "#6FCFA8", "#0E3226"], ["Lilac", "#B08FE0", "#24133D"], ["Slate", "#6E7B8F", "#FFFFFF"]],
+  earth:   [["Terracotta", "#C0572F", "#FFFFFF"], ["Ochre", "#D9A441", "#2E2000"], ["Indigo", "#4257B2", "#FFFFFF"], ["Olive", "#6B7F3A", "#FFFFFF"], ["Umber", "#8A5A3C", "#FFFFFF"], ["Teal", "#2F8F8A", "#FFFFFF"]],
+  neon:    [["Hot pink", "#FF3D7F", "#2B0012"], ["Lime", "#A6E22E", "#1C2A00"], ["Electric", "#2E7BFF", "#FFFFFF"], ["Tangerine", "#FF8A1F", "#2E1600"], ["Violet", "#9D4DFF", "#FFFFFF"], ["Aqua", "#19D3C5", "#00302C"]]
+};
+const ITEMS = {
+  paints: [
+    { id: "classic", name: "Classic", price: 0 },
+    { id: "pastel",  name: "Pastel",  price: 180 },
+    { id: "earth",   name: "Earth",   can: true },
+    { id: "neon",    name: "Neon",    can: true }
+  ],
+  handle: [
+    { id: "classic", name: "Classic",    price: 0 },
+    { id: "birch",   name: "Birch",      price: 120, grip: "#D8B27A", metal: "#9C9384" },
+    { id: "racing",  name: "Racing red", price: 220, grip: "#C7332B", metal: "#B9C0C8" },
+    { id: "pearl",   name: "Pearl",      can: true,  grip: "#ECE6DA", metal: "#B9C0C8" },
+    { id: "brass",   name: "Brass",      stars: 30,  grip: "#3B2F22", metal: "#C9A24A" }
+  ],
+  frame: [
+    { id: "matte",     name: "Matte",        price: 0 },
+    { id: "tape",      name: "Masking tape", price: 150, ring: "#E8D59D", edge: "#C9B57C" },
+    { id: "walnut",    name: "Walnut",       price: 260, ring: "#5E412C", edge: "#3D2A1D" },
+    { id: "blueprint", name: "Blueprint",    can: true,  ring: "#2D5BD0", edge: "#1D3E91" },
+    { id: "oak",       name: "Oak",          stars: 15,  ring: "#B98A55", edge: "#8A6236" },
+    { id: "gilt",      name: "Gilt",         stars: 60,  ring: "#D4AF37", edge: "#9C7A1E" }
+  ]
+};
+const SLOTS = [["paints", "Paint set"], ["handle", "Roller handle"], ["frame", "Canvas frame"]];
+const SLOT_LABEL = Object.fromEntries(SLOTS);
+
+const STORE_KEY = "last-coat-v1";
+const GENERAL_TIPS = [
+  "Find the line that went on last, then work backwards.",
+  "A line whose cells show other colors went on earlier than the lines crossing it.",
+  "Lines that show only their own color can go on at the very end.",
+  "Every new canvas you finish fills the paint can a third of the way."
+];
+const RIG =
+  '<svg class="rigsvg" viewBox="0 0 100 86" preserveAspectRatio="none" aria-hidden="true" focusable="false">' +
+  '<rect class="grip" x="40" y="2" width="20" height="25" rx="6"/>' +
+  '<path class="wire" d="M50 27 V39 H91 V64"/>' +
+  '<rect class="nap" x="9" y="50" width="78" height="30" rx="11"/>' +
+  '<rect class="cap" x="85" y="57" width="7" height="16" rx="2"/>' +
+  '<rect class="shine" x="15" y="53" width="64" height="6" rx="3"/>' +
+  '<path class="fuzz" d="M15 73 H81"/>' +
+  '</svg>';
+const DROP = '<svg class="drop-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.6 4.4 6.5 8.2 6.5 11.6a6.5 6.5 0 0 1-13 0C5.5 10.7 8.4 6.9 12 2.5z"/></svg>';
+const CAN_IC = '<svg class="ic can-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M4 9h16"/><path d="M7.5 9a4.5 4.5 0 0 1 9 0"/><path d="M10 13v3"/></svg>';
+const BULB_IC = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg>';
+const SHIELD_IC = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>';
+const STAR_PATH = "M12 2.6l2.8 6.1 6.7.7-5 4.5 1.4 6.6L12 17.1l-5.9 3.4 1.4-6.6-5-4.5 6.7-.7z";
+const starsHTML = (n) => [0, 1, 2].map((i) =>
+  `<svg viewBox="0 0 24 24" class="star${i < n ? " on" : ""}" aria-hidden="true"><path d="${STAR_PATH}"/></svg>`).join("");
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const reduceMotion = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+const $ = (id) => document.getElementById(id);
+const els = {
+  app: $("app"), board: $("board"), wrap: $("board-wrap"), ref: $("ref"),
+  code: $("chip-code"), dims: $("chip-dims"), swatches: $("chip-swatches"),
+  lvlLabel: $("lvl-label"), lvlOf: $("lvl-of"), panelLvl: $("panel-lvl"), panelOf: $("panel-of"),
+  coats: $("st-coats"), left: $("st-left"), undos: $("st-undos"), hints: $("st-hints"), tip: $("tip"),
+  undo: $("btn-undo"), restart: $("btn-restart"), hint: $("btn-hint"), hintCost: $("hint-cost"), symbols: $("btn-symbols"),
+  wallet: $("btn-wallet"), drops: $("drops"), walletDot: $("wallet-dot"),
+  levelsBtn: $("btn-levels"), levels: $("levels"), levelGrid: $("level-grid"), levelsTrack: $("levels-track"),
+  closeLevels: $("btn-close-levels"), endless: $("btn-endless"), endlessCount: $("endless-count"),
+  win: $("win"), winArt: $("win-art"), winCode: $("win-code"), winTitle: $("win-title"),
+  winStars: $("win-stars"), winStats: $("win-stats"), winGain: $("win-gain"), winBreak: $("win-break"),
+  winChoice: $("win-choice"), skip: $("btn-skip"), skipAmt: $("skip-amt"), double: $("btn-double"), doubleAmt: $("double-amt"),
+  winClaimed: $("win-claimed"), winCan: $("win-can"), winMilestone: $("win-milestone"), winTrack: $("win-track"),
+  winActions: $("win-actions"), next: $("btn-next"), replay: $("btn-replay"),
+  studio: $("studio"), closeStudio: $("btn-close-studio"), studioDrops: $("studio-drops"), studioInv: $("studio-inv"),
+  studioDaily: $("studio-daily"), studioMsg: $("studio-msg"),
+  itemsPaints: $("items-paints"), itemsHandle: $("items-handle"), itemsFrame: $("items-frame"),
+  nextDay: $("btn-nextday"), add: $("btn-add"), fillCan: $("btn-fillcan"), reset: $("btn-reset"), adsCount: $("ads-count"),
+  daily: $("daily"), days: $("days"), dailySub: $("daily-sub"), dailyBtn: $("btn-daily"), dailyDouble: $("btn-daily-double"),
+  cansheet: $("cansheet"), canTitle: $("can-title"), canSub: $("can-sub"), canCards: $("can-cards"),
+  canActions: $("can-actions"), canExtra: $("btn-can-extra"), canDone: $("btn-can-done"),
+  adsheet: $("adsheet"), adCount: $("ad-count"), adFill: $("ad-fill"), adFor: $("ad-for"), adCancel: $("btn-ad-cancel"),
+  toast: $("toast"), toastMsg: $("toast-msg"), toastAct: $("toast-act"),
+  soundBtn: $("btn-sound"), hapticsBtn: $("btn-haptics"), note: $("note")
+};
+const itemBox = { paints: els.itemsPaints, handle: els.itemsHandle, frame: els.itemsFrame };
+
+function defaults() {
+  return {
+    stars: {}, symbols: false, sound: true, haptics: true, endless: 0, current: 0,
+    drops: 40, tokens: 0, savers: 0,
+    owned: { paints: ["classic"], handle: ["classic"], frame: ["matte"] },
+    equip: { paints: "classic", handle: "classic", frame: "matte" },
+    daily: { last: null, streak: 0 }, claimed: [],
+    can: { fill: 0, ready: 0 }, canRoll: null,
+    ads: 0, choices: { doubled: 0, skipped: 0 }, dayShift: 0
+  };
+}
+function loadProgress() {
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw) return JSON.parse(raw) || {}; } catch (e) { /* storage unavailable */ }
+  return {};
+}
+const prog = Object.assign(defaults(), loadProgress());
+function sanitize() {
+  const d = defaults();
+  if (!prog.stars || typeof prog.stars !== "object") prog.stars = {};
+  if (typeof prog.drops !== "number" || !isFinite(prog.drops)) prog.drops = d.drops;
+  if (!prog.owned || typeof prog.owned !== "object") prog.owned = d.owned;
+  if (!prog.equip || typeof prog.equip !== "object") prog.equip = d.equip;
+  for (const [slot] of SLOTS) {
+    if (!Array.isArray(prog.owned[slot])) prog.owned[slot] = d.owned[slot].slice();
+    if (!ITEMS[slot].some((i) => i.id === prog.equip[slot])) prog.equip[slot] = d.equip[slot];
+  }
+  if (!prog.daily || typeof prog.daily !== "object") prog.daily = d.daily;
+  if (!Array.isArray(prog.claimed)) prog.claimed = [];
+  if (!prog.can || typeof prog.can !== "object") prog.can = d.can;
+  if (!prog.choices || typeof prog.choices !== "object") prog.choices = d.choices;
+  if (prog.canRoll && !Array.isArray(prog.canRoll)) prog.canRoll = null;
+  if (typeof prog.sound !== "boolean") prog.sound = true;
+  if (typeof prog.haptics !== "boolean") prog.haptics = true;
+}
+sanitize();
+function saveProgress() { try { localStorage.setItem(STORE_KEY, JSON.stringify(prog)); } catch (e) { /* ignore */ } }
+
+/* ---------- Sound and vibration ---------- */
+// All sounds are synthesized with Web Audio, so there are no audio files to ship.
+const sfx = (() => {
+  let ctx = null, out = null;
+  const ready = () => {
+    if (!prog.sound) return null;
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { ctx = new AC(); out = ctx.createGain(); out.gain.value = 0.55; out.connect(ctx.destination); } catch (e) { return null; }
+    }
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    return ctx;
+  };
+  function tone(freq, at, dur, type, vol, glideTo) {
+    const c = ready(); if (!c) return;
+    const t = c.currentTime + at;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.03);
+  }
+  // A roller on canvas: soft band-passed noise for as long as the roller travels.
+  function roll(seconds) {
+    const c = ready(); if (!c) return;
+    const len = Math.max(0.12, Math.min(1.2, seconds));
+    const buf = c.createBuffer(1, Math.ceil(c.sampleRate * len), c.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime;
+    src.buffer = buf; f.type = "bandpass"; f.frequency.value = 850; f.Q.value = 0.7;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.14, t + 0.04);
+    g.gain.setValueAtTime(0.14, t + len - 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    src.connect(f); f.connect(g); g.connect(out); src.start(t); src.stop(t + len);
+  }
+  return {
+    roll,
+    tap: () => tone(520, 0, 0.07, "triangle", 0.12),
+    coin: () => { tone(988, 0, 0.08, "square", 0.05); tone(1319, 0.07, 0.2, "square", 0.05); },
+    pick: () => { tone(660, 0, 0.12, "triangle", 0.14); tone(990, 0.08, 0.22, "triangle", 0.12); },
+    fail: () => tone(240, 0, 0.3, "sine", 0.16, 150),
+    win: () => [523, 659, 784, 1047].forEach((fq, i) => tone(fq, i * 0.09, 0.4, "triangle", 0.15))
+  };
+})();
+
+// Vibration: native haptics inside the app, navigator.vibrate in a browser.
+function buzz(kind) {
+  if (!prog.haptics) return;
+  const cap = window.Capacitor;
+  const H = cap && cap.Plugins && cap.Plugins.Haptics;
+  try {
+    if (H && cap.isNativePlatform && cap.isNativePlatform()) {
+      if (kind === "win") H.notification({ type: "SUCCESS" });
+      else if (kind === "fail") H.notification({ type: "WARNING" });
+      else H.impact({ style: "LIGHT" });
+    } else if (navigator.vibrate) {
+      navigator.vibrate(kind === "win" ? [20, 50, 30] : kind === "fail" ? [40, 40, 40] : 12);
+    }
+  } catch (e) { /* vibration is optional */ }
+}
+
+// Current paint set colors for a palette index.
+function P(ci) {
+  const s = (PAINT_SETS[prog.equip.paints] || PAINT_SETS.classic)[ci];
+  return { name: s[0], hex: s[1], ink: s[2], glyph: PAINTS[ci].glyph };
+}
+
+const cache = new Map();
+function levelFor(ref) {
+  const key = ref.mode === "main" ? "m" + ref.idx : "e" + ref.seed;
+  if (cache.has(key)) return cache.get(key);
+  let p, seed;
+  if (ref.mode === "main") { p = LEVELS[ref.idx]; seed = seedForLevel(ref.idx); }
+  else {
+    const r = mulberry32(ref.seed);
+    p = { r: r() < 0.55 ? 6 : 5, c: r() < 0.55 ? 6 : 5, dec: 1 + Math.floor(r() * 3), k: 4 + Math.floor(r() * 3), depth: 6, both: true };
+    p.used = Math.min(p.r + p.c - 1, 8 + Math.floor(r() * 4));
+    seed = ref.seed;
+  }
+  const L = generate(p, seed) || generate({ r: 3, c: 3, used: 3, dec: 0, k: 3, depth: 2 }, seed);
+  cache.set(key, L);
+  return L;
+}
+
+let ref = null, L = null, S = null, busy = false, hintId = -1, gen = 0, lastReward = null, canState = null;
+let geom = { cell: 48, slot: 41 };
+const cellEls = [], rollerEls = [];
+
+function freshState() {
+  const N = L.r * L.c;
+  return { board: new Array(N).fill(-1), dirs: new Array(N).fill(""), used: new Set(), history: [], coats: 0, undos: 0, hints: 0, won: false };
+}
+
+function startLevel(newRef, restore) {
+  if (lastReward && !lastReward.claimed) claimReward(1, true);
+  lastReward = null;
+  ref = newRef; L = levelFor(ref); S = freshState();
+  const N = L.r * L.c;
+  if (restore && Array.isArray(restore.board) && restore.board.length === N) {
+    S.board = restore.board.slice(); S.dirs = (restore.dirs || []).slice();
+    S.used = new Set(restore.used || []); S.history = (restore.history || []).map((h) => ({ ...h }));
+    S.coats = restore.coats | 0; S.undos = restore.undos | 0; S.hints = restore.hints | 0; S.won = !!restore.won;
+  }
+  busy = false; hintId = -1; gen++;
+  hideToast(); els.win.hidden = true;
+  if (ref.mode === "main") { prog.current = ref.idx; saveProgress(); }
+  buildBoard(); buildRef(); layoutBoard(); renderAll();
+}
+
+function buildBoard() {
+  const b = els.board;
+  b.textContent = ""; b.classList.remove("won");
+  cellEls.length = 0; rollerEls.length = 0;
+  const R = L.r, C = L.c;
+  const area = `2 / 2 / span ${R} / span ${C}`;
+  const frame = document.createElement("div"); frame.className = "frame"; frame.style.gridArea = area; b.appendChild(frame);
+  for (let i = 0; i < R; i++) for (let j = 0; j < C; j++) {
+    const d = document.createElement("div"); d.className = "cell"; d.style.gridArea = `${i + 2} / ${j + 2}`;
+    b.appendChild(d); cellEls.push(d);
+  }
+  const sheen = document.createElement("div"); sheen.className = "sheen"; sheen.style.gridArea = area; b.appendChild(sheen);
+  L.rollers.forEach((ro, id) => {
+    const p = P(ro.color);
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "roller"; btn.dataset.side = ro.side;
+    btn.style.setProperty("--paint", p.hex); btn.style.setProperty("--gi", p.ink);
+    const isRow = ro.side === "L" || ro.side === "R";
+    const row = isRow ? ro.line + 2 : (ro.side === "T" ? 1 : R + 2);
+    const col = isRow ? (ro.side === "L" ? 1 : C + 2) : ro.line + 2;
+    btn.style.gridArea = `${row} / ${col}`;
+    btn.innerHTML = `<span class="rig">${RIG}<span class="gl" aria-hidden="true">${p.glyph}</span></span>`;
+    btn.addEventListener("click", () => fire(id));
+    b.appendChild(btn); rollerEls.push(btn);
+  });
+}
+
+function buildRef() {
+  const g = els.ref;
+  g.textContent = "";
+  g.style.gridTemplateColumns = `repeat(${L.c}, 1fr)`;
+  g.style.setProperty("--ar", `${L.c} / ${L.r}`);
+  for (const ci of L.target) {
+    const d = document.createElement("div"); d.className = "ref-cell";
+    if (ci >= 0) { const p = P(ci); d.style.background = p.hex; d.dataset.c = ci; d.dataset.glyph = p.glyph; d.style.setProperty("--gi", p.ink); }
+    g.appendChild(d);
+  }
+  els.code.textContent = codeFor(ref);
+  els.dims.textContent = `${L.r} × ${L.c} · ${L.rollers.length} rollers`;
+  const used = [...new Set(L.target.filter((x) => x >= 0))].sort((a, b) => a - b);
+  els.swatches.innerHTML = used.map((ci) => { const p = P(ci); return `<li style="background:${p.hex}" title="${p.name}"><span class="sr">${p.name}</span></li>`; }).join("");
+}
+
+const codeFor = (r) => r.mode === "main" ? `LC-${String(r.idx + 1).padStart(3, "0")}` : `LC-E${String(r.n).padStart(3, "0")}`;
+
+function layoutBoard() {
+  if (!L) return;
+  const w = els.wrap.clientWidth, h = els.wrap.clientHeight;
+  const s = 0.86;
+  const has = (side) => L.rollers.some((ro) => ro.side === side);
+  const hL = has("L"), hR = has("R"), hT = has("T"), hB = has("B");
+  const uW = L.c + (hL ? s : 0) + (hR ? s : 0) + 0.35;
+  const uH = L.r + (hT ? s : 0) + (hB ? s : 0) + 0.35;
+  const cell = Math.max(28, Math.floor(Math.min(w / uW, h / uH, 84)));
+  const slot = Math.round(cell * s);
+  const b = els.board;
+  b.style.setProperty("--cell", cell + "px");
+  b.style.setProperty("--slot", slot + "px");
+  b.style.gridTemplateColumns = `${hL ? slot : 0}px repeat(${L.c}, ${cell}px) ${hR ? slot : 0}px`;
+  b.style.gridTemplateRows = `${hT ? slot : 0}px repeat(${L.r}, ${cell}px) ${hB ? slot : 0}px`;
+  geom = { cell, slot };
+}
+
+function paintStatic(k) {
+  const el = cellEls[k], ci = S.board[k];
+  if (!el) return;
+  if (ci < 0) {
+    el.style.background = ""; delete el.dataset.c; delete el.dataset.dir; delete el.dataset.glyph;
+  } else {
+    const p = P(ci);
+    el.style.background = p.hex; el.dataset.c = ci; el.dataset.dir = S.dirs[k] || "h";
+    el.dataset.glyph = p.glyph; el.style.setProperty("--gi", p.ink);
+  }
+}
+function renderCells() { for (let k = 0; k < cellEls.length; k++) { cellEls[k].querySelectorAll(".coat").forEach((c) => c.remove()); paintStatic(k); } }
+function renderRollers() {
+  rollerEls.forEach((btn, id) => {
+    const ro = L.rollers[id], p = P(ro.color);
+    const spent = S.used.has(id);
+    btn.classList.toggle("spent", spent);
+    btn.classList.toggle("hinted", id === hintId);
+    btn.disabled = spent;
+    const where = (ro.side === "L" || ro.side === "R") ? `row ${ro.line + 1}` : `column ${ro.line + 1}`;
+    btn.setAttribute("aria-label", `${p.name} roller, ${where}${spent ? ", used" : ""}${id === hintId ? ", suggested next" : ""}`);
+  });
+}
+function renderStats() {
+  els.coats.textContent = S.coats;
+  els.left.textContent = L.rollers.length - S.used.size;
+  els.undos.textContent = S.undos;
+  els.hints.textContent = S.hints;
+  els.undo.disabled = !S.history.length || S.won;
+  els.restart.disabled = S.coats === 0 && !S.won;
+  els.hint.disabled = S.won;
+}
+function renderHeader() {
+  const main = ref.mode === "main";
+  const label = main ? `Level ${ref.idx + 1}` : `Endless ${ref.n}`;
+  const of = main ? `/ ${LEVELS.length}` : "generated";
+  els.lvlLabel.textContent = label; els.lvlOf.textContent = of;
+  els.panelLvl.textContent = label; els.panelOf.textContent = of;
+  els.tip.textContent = main
+    ? (LEVELS[ref.idx].tip || GENERAL_TIPS[ref.idx % GENERAL_TIPS.length])
+    : "A generated canvas. Every one has a solution.";
+}
+function renderAll() { renderCells(); renderRollers(); renderStats(); renderHeader(); }
+function refreshPaints() { if (!L) return; buildBoard(); buildRef(); layoutBoard(); renderAll(); }
+
+function fire(id) {
+  if (busy || S.won || S.used.has(id)) return;
+  const ro = L.rollers[id];
+  hideToast();
+  S.history.push({ board: S.board.slice(), dirs: S.dirs.slice(), used: [...S.used], coats: S.coats });
+  const cells = lineCells(L, ro);
+  const dir = (ro.side === "L" || ro.side === "R") ? "h" : "v";
+  for (const k of cells) { S.board[k] = ro.color; S.dirs[k] = dir; }
+  S.used.add(id); S.coats++;
+  hintId = -1;
+  busy = true;
+  renderStats();
+  const my = gen;
+  const btn = rollerEls[id];
+  btn.classList.remove("hinted");
+  const { cell, slot } = geom;
+  const step = reduceMotion ? 0 : 70;
+  let anim = null;
+  const finish = () => {
+    if (my !== gen) return;
+    busy = false;
+    btn.classList.remove("firing");
+    renderRollers();
+    if (anim) { anim.cancel(); btn.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220 }); }
+    renderCells();
+    afterMove();
+  };
+  buzz("light");
+  if (!step) { sfx.roll(0.15); finish(); return; }
+  const v = cell / step;
+  const lead = slot * 0.2;
+  const travel = lead + cells.length * cell + cell * 0.4;
+  const Dt = travel / v, D = Dt + 160;
+  const [dx, dy] = { L: [1, 0], R: [-1, 0], T: [0, 1], B: [0, -1] }[ro.side];
+  sfx.roll(Dt / 1000);
+  btn.classList.add("firing");
+  anim = btn.animate([
+    { transform: "translate(0px, 0px)", opacity: 1 },
+    { transform: `translate(${dx * travel}px, ${dy * travel}px)`, opacity: 1, offset: Dt / D },
+    { transform: `translate(${dx * (travel + cell * 0.3)}px, ${dy * (travel + cell * 0.3)}px)`, opacity: 0 }
+  ], { duration: D, easing: "linear", fill: "forwards" });
+  cells.forEach((k, idx) => setTimeout(() => { if (my === gen) wipe(k, ro, dir, step * 1.1); }, (lead + idx * cell) / v));
+  setTimeout(finish, D + 30);
+}
+
+function wipe(k, ro, dir, dur) {
+  const el = cellEls[k];
+  if (!el) return;
+  const coat = document.createElement("div");
+  coat.className = "coat"; coat.dataset.dir = dir; coat.style.background = P(ro.color).hex;
+  el.appendChild(coat);
+  const from = { L: "inset(0 100% 0 0)", R: "inset(0 0 0 100%)", T: "inset(0 0 100% 0)", B: "inset(100% 0 0 0)" }[ro.side];
+  const a = coat.animate([{ clipPath: from }, { clipPath: "inset(0 0 0 0)" }], { duration: dur, easing: "ease-out", fill: "forwards" });
+  a.onfinish = () => { paintStatic(k); coat.remove(); };
+}
+
+const isWin = () => S.board.every((v, k) => v === L.target[k]);
+
+function afterMove() {
+  if (isWin()) { celebrate(); return; }
+  if (!planSolve(L, L.target, L.rollers, S.board, S.used)) {
+    sfx.fail(); buzz("fail");
+    showToast("This canvas can't match the reference anymore.", "Undo", undo);
+  }
+}
+
+/* ---------- Wallet, daily gift, milestones ---------- */
+const totalStars = () => Object.values(prog.stars).reduce((a, b) => a + (b | 0), 0);
+
+function dayNumber() {
+  const t = Date.now() + (prog.dayShift || 0) * 86400000;
+  return Math.floor((t - new Date(t).getTimezoneOffset() * 60000) / 86400000);
+}
+function dailyState() {
+  const t = dayNumber(), last = prog.daily.last, streak = prog.daily.streak | 0;
+  if (last === t) return { ready: false, day: Math.max(1, streak), t };
+  const cont = last === t - 1;
+  const missed = last !== null && last !== undefined && !cont;
+  const saved = missed && streak > 0 && (prog.savers | 0) > 0;
+  return { ready: true, day: cont || saved ? (streak % 7) + 1 : 1, t, broke: missed && !saved, saved };
+}
+
+function renderWallet(bump) {
+  const gift = dailyState().ready, cans = prog.can.ready | 0;
+  els.drops.textContent = prog.drops;
+  els.walletDot.hidden = !(gift || cans > 0);
+  els.wallet.setAttribute("aria-label", `Studio. ${prog.drops} paint drops${gift ? ". Daily gift ready" : ""}${cans ? `. ${plural(cans, "paint can")} to open` : ""}`);
+  if (bump && !reduceMotion) { els.wallet.classList.remove("bump"); void els.wallet.offsetWidth; els.wallet.classList.add("bump"); }
+}
+function floatGain(n) {
+  if (!n || reduceMotion) return;
+  const r = els.wallet.getBoundingClientRect();
+  const s = document.createElement("span");
+  s.className = "gain"; s.setAttribute("aria-hidden", "true");
+  s.textContent = (n > 0 ? "+" : "−") + Math.abs(n);
+  s.style.left = (r.left + r.width / 2) + "px"; s.style.top = (r.bottom + 6) + "px";
+  document.body.appendChild(s);
+  setTimeout(() => s.remove(), 1200);
+}
+function addDrops(n) { prog.drops = (prog.drops | 0) + n; saveProgress(); renderWallet(true); floatGain(n); }
+function spendDrops(n) {
+  if (prog.drops < n) return false;
+  prog.drops -= n; saveProgress(); renderWallet(true); floatGain(-n);
+  return true;
+}
+function renderHintCost() {
+  const t = prog.tokens | 0;
+  els.hintCost.innerHTML = t > 0 ? `Free ×${t}` : `${DROP}${HINT_COST}`;
+  els.hint.setAttribute("aria-label", t > 0 ? `Hint, ${plural(t, "free hint")} left` : `Hint, costs ${HINT_COST} drops`);
+}
+function claimMilestones() {
+  const total = totalStars(), out = [];
+  for (const m of MILESTONES) {
+    if (total < m.at || prog.claimed.includes(m.at)) continue;
+    prog.claimed.push(m.at);
+    if (m.drops) prog.drops += m.drops;
+    if (m.unlock) { const [slot, id] = m.unlock; if (!prog.owned[slot].includes(id)) prog.owned[slot].push(id); }
+    out.push(m);
+  }
+  saveProgress();
+  return out;
+}
+function renderTrack(el, withList) {
+  const total = totalStars(), max = LEVELS.length * 3;
+  const next = MILESTONES.find((m) => total < m.at);
+  el.innerHTML =
+    `<div class="track-head"><span>Star rewards</span><span class="track-num">${total} / ${max} ★</span></div>` +
+    `<div class="track-bar" role="img" aria-label="${total} of ${max} stars"><span style="width:${(total / max) * 100}%"></span>` +
+    MILESTONES.map((m) => `<i class="${total >= m.at ? "got" : ""}" style="left:${(m.at / max) * 100}%"></i>`).join("") + `</div>` +
+    `<p class="track-next">${next ? `${next.at - total} more ★ for: <strong>${next.label}</strong>` : "Every star reward collected."}</p>` +
+    (withList ? `<ul class="track-list">${MILESTONES.map((m) => `<li class="${total >= m.at ? "got" : ""}">${m.at}★ ${m.label}</li>`).join("")}</ul>` : "");
+}
+function countUp(el, from, to) {
+  if (reduceMotion) { el.textContent = "+" + to; return; }
+  const t0 = performance.now(), dur = 650;
+  const tick = (t) => {
+    const p = Math.min(1, (t - t0) / dur);
+    el.textContent = "+" + Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ---------- Finishing a canvas: Double it or Skip ---------- */
+function celebrate() {
+  S.won = true;
+  const slips = S.undos + S.hints;
+  const stars = slips === 0 ? 3 : slips <= 2 ? 2 : 1;
+  let base = 0, bonus = 0, kind;
+  if (ref.mode === "main") {
+    const key = String(ref.idx), prev = prog.stars[key] || 0;
+    if (!prev) { base = 10; bonus = 5 * stars; kind = "first"; }
+    else if (stars > prev) { bonus = 5 * (stars - prev); kind = "better"; }
+    else { base = 3; kind = "replay"; }
+    prog.stars[key] = Math.max(prev, stars);
+    prog.current = Math.min(ref.idx + 1, LEVELS.length - 1);
+  } else {
+    base = 15; bonus = 5 * stars; kind = "endless";
+    prog.endless = (prog.endless || 0) + 1;
+  }
+  const newly = claimMilestones();
+  let canFilled = false;
+  if (kind !== "replay") {
+    prog.can.fill = (prog.can.fill | 0) + 1;
+    if (prog.can.fill >= CAN_SIZE) { prog.can.fill = 0; prog.can.ready = (prog.can.ready | 0) + 1; canFilled = true; }
+  }
+  saveProgress();
+  lastReward = { stars, base, bonus, total: base + bonus, kind, newly, canFilled, claimed: false };
+  renderWallet(newly.some((m) => m.drops));
+  renderStats();
+  els.board.classList.add("won");
+  sfx.win(); buzz("win");
+  const my = gen;
+  setTimeout(() => { if (my === gen) showWin(); }, reduceMotion ? 60 : 850);
+}
+
+function showWin() {
+  const R = lastReward;
+  els.winArt.textContent = "";
+  els.winArt.style.gridTemplateColumns = `repeat(${L.c}, 1fr)`;
+  els.winArt.style.setProperty("--ar", `${L.c} / ${L.r}`);
+  for (const ci of L.target) { const s = document.createElement("span"); if (ci >= 0) s.style.background = P(ci).hex; els.winArt.appendChild(s); }
+  els.winCode.textContent = codeFor(ref);
+  els.winTitle.textContent = R.stars === 3 ? "Clean finish" : R.stars === 2 ? "Matched" : "Matched, with touch-ups";
+  els.winStars.innerHTML = starsHTML(R.stars);
+  els.winStars.setAttribute("aria-label", `${R.stars} of 3 stars`);
+  els.winStats.textContent = `${plural(S.coats, "coat")} · ${plural(S.undos, "undo")} · ${plural(S.hints, "hint")}`;
+  els.winBreak.textContent =
+    R.kind === "first" || R.kind === "endless" ? `Finish ${R.base} + stars ${R.bonus}` :
+    R.kind === "better" ? `New stars earned: ${R.bonus}` : `Replay bonus ${R.base}. Beat your stars for more.`;
+  els.winGain.textContent = "+0";
+  countUp(els.winGain, 0, R.total);
+  els.skipAmt.textContent = `take ${R.total}`;
+  els.doubleAmt.textContent = R.total * 2;
+  els.skip.setAttribute("aria-label", `Skip the ad and take ${R.total} drops`);
+  els.double.setAttribute("aria-label", `Double it: watch an ad and take ${R.total * 2} drops`);
+  els.winChoice.hidden = R.claimed; els.winClaimed.hidden = !R.claimed; els.winActions.hidden = !R.claimed;
+  if (R.newly.length) {
+    const unlocks = R.newly.some((m) => m.unlock);
+    els.winMilestone.textContent = `Star reward: ${R.newly.map((m) => m.label).join(", ")}.` + (unlocks ? " Equip it in the Studio." : "");
+    els.winMilestone.hidden = false;
+  } else els.winMilestone.hidden = true;
+  renderWinCan();
+  renderTrack(els.winTrack, false);
+  els.next.textContent = ref.mode === "main" && ref.idx < LEVELS.length - 1 ? "Next canvas" : ref.mode === "main" ? "Start endless mode" : "New canvas";
+  openSheet(els.win);
+}
+
+function claimReward(mult, quiet) {
+  const R = lastReward;
+  if (!R || R.claimed) return;
+  R.claimed = true;
+  const amount = R.total * mult;
+  addDrops(amount);
+  if (!quiet) sfx.coin();
+  if (mult === 2) prog.choices.doubled = (prog.choices.doubled | 0) + 1;
+  else prog.choices.skipped = (prog.choices.skipped | 0) + 1;
+  saveProgress();
+  if (quiet) return;
+  if (mult === 2) countUp(els.winGain, R.total, amount);
+  els.winChoice.hidden = true;
+  els.winClaimed.hidden = false;
+  els.winClaimed.textContent = mult === 2 ? `Doubled. ${amount} drops added.` : `${amount} drops added.`;
+  els.winActions.hidden = false;
+  renderWinCan();
+  const canBtn = els.winCan.querySelector("button");
+  (canBtn || els.next).focus({ preventScroll: true });
+}
+
+function renderWinCan() {
+  const R = lastReward, ready = prog.can.ready | 0, fill = prog.can.fill | 0;
+  if (ready > 0) {
+    els.winCan.innerHTML = `${CAN_IC}<span>${R && R.canFilled ? "You filled a paint can." : "A paint can is waiting."}<small>Open it and pick one of three rewards.</small></span>` +
+      `<button class="btn btn-gold" type="button"${R && !R.claimed ? " disabled" : ""}>Open</button>`;
+    els.winCan.querySelector("button").addEventListener("click", openCan);
+  } else {
+    const segs = Array.from({ length: CAN_SIZE }, (_, i) => `<i class="${i < fill ? "on" : ""}"></i>`).join("");
+    els.winCan.innerHTML = `${CAN_IC}<span>Paint can<span class="segs" aria-hidden="true">${segs}</span>${fill}/${CAN_SIZE}<small>Each new canvas you finish adds a third.</small></span>`;
+  }
+}
+
+/* ---------- Paint can: pick one of three ---------- */
+function canItemsLeft() {
+  const out = [];
+  for (const [slot] of SLOTS) for (const item of ITEMS[slot]) if (item.can && !prog.owned[slot].includes(item.id)) out.push({ type: "item", slot, id: item.id });
+  return out;
+}
+function rollCan() {
+  const r = Math.random, pick = (a) => a[Math.floor(r() * a.length)];
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const opts = [
+    { type: "drops", amount: pick([40, 60, 60, 80, 100]) },
+    { type: "hints", amount: pick([1, 2, 2, 3]) },
+    { type: "saver", amount: 1 }
+  ];
+  const items = canItemsLeft();
+  const item = items.length ? pick(items) : null;
+  if (item) opts.push(item);
+  const chosen = shuffle(opts).slice(0, 3);
+  if (item && !chosen.includes(item) && r() < 0.7) chosen[2] = item;
+  return shuffle(chosen);
+}
+const itemOf = (rw) => ITEMS[rw.slot].find((x) => x.id === rw.id);
+function cardTitle(rw) {
+  if (rw.type === "drops") return `${rw.amount} drops`;
+  if (rw.type === "hints") return plural(rw.amount, "free hint");
+  if (rw.type === "saver") return "Streak saver";
+  return `${itemOf(rw).name} ${SLOT_LABEL[rw.slot].toLowerCase()}`;
+}
+function itemArt(slot, item) {
+  if (slot === "handle") return `<span class="item-art" style="--paint:#2D5BD0;--skin-grip:${item.grip || "var(--grip)"};--skin-metal:${item.metal || "var(--metal)"}">${RIG}</span>`;
+  if (slot === "frame") return `<span class="item-art"><span class="frame-art" style="--ring:${item.ring || "var(--surface)"};--edge:${item.edge || "var(--line)"}"></span></span>`;
+  return `<span class="item-art"><span class="set-art">${PAINT_SETS[item.id].map((c) => `<i style="background:${c[1]}"></i>`).join("")}</span></span>`;
+}
+function cardHTML(rw, picked) {
+  let tag, art, desc;
+  if (rw.type === "drops") { tag = "Drops"; art = DROP; desc = "Spend on hints or in the Studio."; }
+  else if (rw.type === "hints") { tag = "Hints"; art = BULB_IC; desc = "Used before drops when you tap Hint."; }
+  else if (rw.type === "saver") { tag = "Streak"; art = SHIELD_IC; desc = "Keeps your daily streak alive if you miss a day."; }
+  else { tag = "Rare"; art = itemArt(rw.slot, itemOf(rw)); desc = "Only found in paint cans."; }
+  return `<span class="tag">${picked ? "Collected" : tag}</span><span class="card-art">${art}</span><span class="card-title">${cardTitle(rw)}</span><span class="card-desc">${desc}</span>`;
+}
+function openCan() {
+  if ((prog.can.ready | 0) <= 0) return;
+  if (!Array.isArray(prog.canRoll) || !prog.canRoll.length) { prog.canRoll = rollCan(); saveProgress(); }
+  canState = { roll: prog.canRoll, chosen: [], allowed: 1, extraUsed: false };
+  renderCan();
+  openSheet(els.cansheet);
+  const first = els.canCards.querySelector(".card:not([disabled])");
+  if (first) first.focus({ preventScroll: true });
+}
+function renderCan() {
+  const cs = canState;
+  const n = cs.chosen.length, done = n >= cs.allowed;
+  els.canCards.textContent = "";
+  cs.roll.forEach((rw, i) => {
+    const picked = cs.chosen.includes(i);
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "card" + (picked ? " picked" : "") + (!picked && done ? " passed" : "");
+    b.disabled = picked || done;
+    b.innerHTML = cardHTML(rw, picked);
+    b.setAttribute("aria-label", `${cardTitle(rw)}. ${picked ? "Collected." : done ? "Not picked." : "Pick this reward."}`);
+    b.addEventListener("click", () => pickCard(i));
+    els.canCards.appendChild(b);
+  });
+  els.canTitle.textContent = !n ? "Pick one" : done ? "Collected" : "Pick one more";
+  els.canSub.textContent = !n ? "Choose one reward. The other two go back in the can."
+    : done ? (cs.extraUsed ? "Both rewards are yours." : "Want the other one too? Watch an ad to pick a second reward.")
+    : "Pick your second reward.";
+  els.canActions.hidden = !done;
+  const showExtra = done && !cs.extraUsed && n < cs.roll.length;
+  els.canExtra.hidden = !showExtra;
+  els.canActions.classList.toggle("single", !showExtra);
+}
+function pickCard(i) {
+  const cs = canState;
+  if (!cs || cs.chosen.includes(i) || cs.chosen.length >= cs.allowed) return;
+  if (!cs.chosen.length) { prog.can.ready = Math.max(0, (prog.can.ready | 0) - 1); prog.canRoll = null; }
+  cs.chosen.push(i);
+  grant(cs.roll[i]);
+  sfx.pick(); buzz("light");
+  renderCan();
+  (els.canExtra.hidden ? els.canDone : els.canExtra).focus({ preventScroll: true });
+  if (!els.win.hidden) renderWinCan();
+  if (!els.studio.hidden) renderStudio();
+}
+function grant(rw) {
+  if (rw.type === "drops") { addDrops(rw.amount); return; }
+  if (rw.type === "hints") prog.tokens = (prog.tokens | 0) + rw.amount;
+  else if (rw.type === "saver") prog.savers = (prog.savers | 0) + rw.amount;
+  else if (rw.type === "item") {
+    const own = prog.owned[rw.slot];
+    if (own.includes(rw.id)) { addDrops(120); return; }
+    own.push(rw.id);
+  }
+  saveProgress(); renderWallet(true); renderHintCost();
+}
+
+/* ---------- Pretend rewarded ad ---------- */
+let adTimer = null;
+function playAd(forText, onReward) {
+  const total = 3000, t0 = Date.now();
+  els.adFor.textContent = forText;
+  els.adCount.textContent = "3"; els.adFill.style.width = "0%";
+  openSheet(els.adsheet);
+  clearInterval(adTimer);
+  adTimer = setInterval(() => {
+    const el = Date.now() - t0;
+    els.adCount.textContent = Math.max(0, Math.ceil((total - el) / 1000));
+    els.adFill.style.width = Math.min(100, (el / total) * 100) + "%";
+    if (el >= total) {
+      clearInterval(adTimer); adTimer = null;
+      prog.ads = (prog.ads | 0) + 1; saveProgress();
+      closeSheet(els.adsheet);
+      onReward();
+    }
+  }, 100);
+}
+function cancelAd() { clearInterval(adTimer); adTimer = null; closeSheet(els.adsheet); }
+
+/* ---------- Daily gift ---------- */
+function openDaily() { hideToast(); renderDaily(); openSheet(els.daily); }
+function renderDaily() {
+  const st = dailyState();
+  els.days.innerHTML = DAILY.map((amt, i) => {
+    const n = i + 1;
+    const done = st.ready ? n < st.day : n <= st.day;
+    const today = st.ready && n === st.day;
+    const cls = [done ? "done" : "", today ? "today" : "", n === 7 ? "big" : ""].filter(Boolean).join(" ");
+    return `<li class="${cls}"><span class="d-num">Day ${n}</span>${done ? '<span class="d-check" aria-hidden="true">✓</span>' : DROP}<span class="d-amt">${amt}</span>${n === 7 ? '<span class="d-extra">+ can</span>' : ""}<span class="sr">${done ? "collected" : today ? "today" : "upcoming"}</span></li>`;
+  }).join("");
+  if (st.ready) {
+    const amt = DAILY[st.day - 1];
+    els.dailySub.textContent = st.saved ? "You missed a day. A streak saver kept your streak going."
+      : st.broke ? "You missed a day, so the streak starts again at day 1."
+      : `Day ${st.day} of 7. Miss a day and the streak starts over.`;
+    els.dailyBtn.textContent = `Collect ${amt}`;
+    els.dailyDouble.hidden = false;
+    els.dailyDouble.innerHTML = `Collect ${amt * 2} <span class="ad">AD</span>`;
+  } else {
+    els.dailySub.textContent = st.day === 7
+      ? "Collected today, including a paint can. Tomorrow a new week starts at 20 drops."
+      : `Collected today. Tomorrow's gift: ${DAILY[st.day % 7]} drops.`;
+    els.dailyBtn.textContent = "Close";
+    els.dailyDouble.hidden = true;
+  }
+}
+function collectDaily(mult) {
+  const st = dailyState();
+  if (!st.ready) return;
+  if (st.saved) prog.savers = Math.max(0, (prog.savers | 0) - 1);
+  prog.daily = { last: st.t, streak: st.day };
+  if (st.day === 7) prog.can.ready = (prog.can.ready | 0) + 1;
+  addDrops(DAILY[st.day - 1] * mult);
+  sfx.coin();
+  renderDaily();
+  if (!els.studio.hidden) renderStudio();
+  els.dailyBtn.focus({ preventScroll: true });
+}
+
+/* ---------- Studio ---------- */
+function applySkin() {
+  const h = ITEMS.handle.find((i) => i.id === prog.equip.handle) || ITEMS.handle[0];
+  const f = ITEMS.frame.find((i) => i.id === prog.equip.frame) || ITEMS.frame[0];
+  const st = els.app.style;
+  const set = (k, v) => (v ? st.setProperty(k, v) : st.removeProperty(k));
+  set("--skin-grip", h.grip); set("--skin-metal", h.metal);
+  set("--frame-ring", f.ring); set("--frame-edge", f.edge);
+}
+function renderStudio(msg) {
+  els.studioDrops.textContent = prog.drops;
+  if (msg !== undefined) els.studioMsg.textContent = msg;
+  const cans = prog.can.ready | 0;
+  els.studioInv.innerHTML =
+    `<span>Free hints <b>${prog.tokens | 0}</b></span><span>Streak savers <b>${prog.savers | 0}</b></span>` +
+    `<span>Paint cans <b>${cans}</b> <small>next ${prog.can.fill | 0}/${CAN_SIZE}</small></span>` +
+    (cans ? `<button class="btn btn-gold" type="button">Open can</button>` : "");
+  const invBtn = els.studioInv.querySelector("button");
+  if (invBtn) invBtn.addEventListener("click", openCan);
+  for (const [slot, label] of SLOTS) {
+    const box = itemBox[slot];
+    box.textContent = "";
+    ITEMS[slot].forEach((item) => {
+      const owned = prog.owned[slot].includes(item.id);
+      const equipped = prog.equip[slot] === item.id;
+      const locked = !owned && (!!item.stars || !!item.can);
+      const b = document.createElement("button");
+      b.type = "button"; b.dataset.id = item.id;
+      b.className = "item" + (equipped ? " equipped" : "") + (locked ? " locked" : "");
+      const status = equipped ? "Equipped" : owned ? "Equip" : item.stars ? `${item.stars}★ reward` : item.can ? "Paint can" : `${DROP}${item.price}`;
+      b.innerHTML = `${itemArt(slot, item)}<span class="item-name">${item.name}</span><span class="item-status">${status}</span>`;
+      b.setAttribute("aria-label", `${item.name} ${label.toLowerCase()}. ` + (equipped ? "Equipped." : owned ? "Owned. Select to equip."
+        : item.stars ? `Unlocks at ${item.stars} stars.` : item.can ? "Only found in paint cans." : `Costs ${item.price} drops.`));
+      b.addEventListener("click", () => onItem(slot, item));
+      box.appendChild(b);
+    });
+  }
+  const st = dailyState();
+  els.studioDaily.innerHTML = st.ready
+    ? `<span>Daily gift ready: day ${st.day}, ${DAILY[st.day - 1]} drops.</span><button class="btn btn-solid" type="button">Open</button>`
+    : `<span>Daily gift collected. Streak: day ${st.day} of 7.</span><button class="btn" type="button">View</button>`;
+  els.studioDaily.querySelector("button").addEventListener("click", openDaily);
+  const c = prog.choices;
+  els.adsCount.textContent = `Pretend ads watched: ${prog.ads || 0}. On the win screen you chose Double it ${plural(c.doubled | 0, "time")} and Skip ${plural(c.skipped | 0, "time")}.`;
+}
+function onItem(slot, item) {
+  const refocus = () => { const b = itemBox[slot].querySelector(`[data-id="${item.id}"]`); if (b) b.focus({ preventScroll: true }); };
+  if (prog.owned[slot].includes(item.id)) {
+    prog.equip[slot] = item.id; saveProgress();
+    if (slot === "paints") refreshPaints(); else applySkin();
+    renderStudio(`${item.name} equipped.`); refocus(); return;
+  }
+  if (item.stars) { renderStudio(`${item.name} unlocks at ${item.stars} stars. You have ${totalStars()}.`); refocus(); return; }
+  if (item.can) { renderStudio(`${item.name} only turns up in paint cans.`); refocus(); return; }
+  if (prog.drops < item.price) { renderStudio(`You need ${item.price - prog.drops} more drops for ${item.name}.`); refocus(); return; }
+  spendDrops(item.price);
+  prog.owned[slot].push(item.id); prog.equip[slot] = item.id; saveProgress();
+  if (slot === "paints") refreshPaints(); else applySkin();
+  renderStudio(`Bought ${item.name} and equipped it.`); refocus();
+}
+
+/* ---------- Tools ---------- */
+function goNext() {
+  closeSheet(els.win, true);
+  if (ref.mode === "main" && ref.idx < LEVELS.length - 1) startLevel({ mode: "main", idx: ref.idx + 1 });
+  else startEndless();
+}
+function startEndless() {
+  const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+  startLevel({ mode: "endless", seed, n: (prog.endless || 0) + 1 });
+}
+
+function undo() {
+  if (busy || S.won || !S.history.length) return;
+  const h = S.history.pop();
+  S.board = h.board; S.dirs = h.dirs; S.used = new Set(h.used); S.coats = h.coats;
+  S.undos++; hintId = -1; gen++;
+  hideToast();
+  renderAll();
+}
+
+function restart() {
+  if (busy) return;
+  const wasWon = S.won, hadCoats = S.coats > 0;
+  const { undos, hints } = S;
+  closeSheet(els.win, true);
+  S = freshState();
+  if (!wasWon) { S.undos = undos + (hadCoats ? 1 : 0); S.hints = hints; }
+  hintId = -1; gen++;
+  hideToast(); els.board.classList.remove("won");
+  renderAll();
+}
+
+function giveHint(id) { hintId = id; S.hints++; sfx.tap(); renderRollers(); renderStats(); }
+function hint() {
+  if (busy || S.won) return;
+  const plan = planSolve(L, L.target, L.rollers, S.board, S.used);
+  if (!plan) { showToast("No hint from here. Undo first, then ask again.", "Undo", undo); return; }
+  if (!plan.length || hintId === plan[0]) return;
+  if ((prog.tokens | 0) > 0) { prog.tokens--; saveProgress(); renderHintCost(); giveHint(plan[0]); return; }
+  if (spendDrops(HINT_COST)) { giveHint(plan[0]); return; }
+  showToast(`A hint costs ${HINT_COST} drops. You have ${prog.drops}.`, "Watch ad", () =>
+    playAd("Reward: one free hint", () => {
+      const p2 = planSolve(L, L.target, L.rollers, S.board, S.used);
+      if (p2 && p2.length) giveHint(p2[0]);
+    }));
+}
+
+function applySymbols() {
+  els.app.classList.toggle("symbols", !!prog.symbols);
+  els.symbols.setAttribute("aria-pressed", prog.symbols ? "true" : "false");
+}
+
+let toastFn = null;
+function showToast(msg, label, fn) {
+  els.toastMsg.textContent = msg; els.toastAct.textContent = label; toastFn = fn; els.toast.hidden = false;
+}
+function hideToast() { els.toast.hidden = true; toastFn = null; }
+
+const STACK = () => [els.adsheet, els.cansheet, els.daily, els.studio, els.levels, els.win];
+const anySheetOpen = () => STACK().some((s) => !s.hidden);
+function openSheet(el) {
+  el._ret = document.activeElement;
+  el.hidden = false;
+  const f = el.querySelector("[data-autofocus]:not([hidden])") || el.querySelector("button:not([disabled]):not([hidden])");
+  if (f) f.focus({ preventScroll: true });
+}
+function closeSheet(el, silent) {
+  if (el.hidden) return;
+  if (el === els.win && lastReward && !lastReward.claimed) claimReward(1, true);
+  el.hidden = true;
+  if (!silent && el._ret && document.contains(el._ret) && el._ret.focus) el._ret.focus({ preventScroll: true });
+  if (!silent && el === els.win && S && S.won) showToast("Canvas finished.", ref.mode === "main" && ref.idx === LEVELS.length - 1 ? "Endless" : "Next", goNext);
+}
+
+function renderLevels() {
+  const nextIdx = LEVELS.findIndex((_, i) => !prog.stars[i]);
+  renderTrack(els.levelsTrack, true);
+  els.levelGrid.textContent = "";
+  LEVELS.forEach((_, idx) => {
+    const st = prog.stars[idx] || 0;
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip";
+    if (idx === nextIdx) b.classList.add("next");
+    if (ref.mode === "main" && ref.idx === idx) b.classList.add("current");
+    const art = document.createElement("span"); art.className = "chip-art"; art.setAttribute("aria-hidden", "true");
+    if (st) {
+      const Lv = levelFor({ mode: "main", idx });
+      art.classList.add("done");
+      art.style.gridTemplateColumns = `repeat(${Lv.c}, 1fr)`;
+      art.style.gridTemplateRows = `repeat(${Lv.r}, 1fr)`;
+      for (const ci of Lv.target) { const s = document.createElement("span"); if (ci >= 0) s.style.background = P(ci).hex; art.appendChild(s); }
+    } else {
+      art.textContent = idx + 1;
+    }
+    const meta = document.createElement("span"); meta.className = "chip-meta";
+    meta.innerHTML = `<span class="chip-code">LC-${String(idx + 1).padStart(3, "0")}</span><span class="stars">${starsHTML(st)}</span>`;
+    b.append(art, meta);
+    b.setAttribute("aria-label", `Level ${idx + 1}${st ? `, ${st} of 3 stars` : ", not finished"}`);
+    b.addEventListener("click", () => { closeSheet(els.levels, true); startLevel({ mode: "main", idx }); });
+    els.levelGrid.appendChild(b);
+  });
+  els.endlessCount.textContent = `${prog.endless || 0} finished`;
+}
+
+// Wiring
+els.undo.addEventListener("click", undo);
+els.restart.addEventListener("click", restart);
+els.hint.addEventListener("click", hint);
+els.symbols.addEventListener("click", () => { prog.symbols = !prog.symbols; saveProgress(); applySymbols(); });
+function applySettings() {
+  els.soundBtn.setAttribute("aria-pressed", prog.sound ? "true" : "false");
+  els.hapticsBtn.setAttribute("aria-pressed", prog.haptics ? "true" : "false");
+}
+els.soundBtn.addEventListener("click", () => { prog.sound = !prog.sound; saveProgress(); applySettings(); sfx.tap(); });
+els.hapticsBtn.addEventListener("click", () => { prog.haptics = !prog.haptics; saveProgress(); applySettings(); buzz("light"); });
+els.levelsBtn.addEventListener("click", () => { if (busy) return; renderLevels(); openSheet(els.levels); });
+els.closeLevels.addEventListener("click", () => closeSheet(els.levels));
+els.endless.addEventListener("click", () => { closeSheet(els.levels, true); startEndless(); });
+els.next.addEventListener("click", goNext);
+els.replay.addEventListener("click", restart);
+els.skip.addEventListener("click", () => claimReward(1));
+els.double.addEventListener("click", () => {
+  const R = lastReward; if (!R || R.claimed) return;
+  playAd(`Reward: ${R.total * 2} drops instead of ${R.total}`, () => claimReward(2));
+});
+els.wallet.addEventListener("click", () => { if (busy) return; hideToast(); renderStudio(""); openSheet(els.studio); });
+els.closeStudio.addEventListener("click", () => closeSheet(els.studio));
+els.dailyBtn.addEventListener("click", () => { if (dailyState().ready) collectDaily(1); else closeSheet(els.daily); });
+els.dailyDouble.addEventListener("click", () => {
+  const st = dailyState(); if (!st.ready) return;
+  playAd(`Reward: ${DAILY[st.day - 1] * 2} drops`, () => collectDaily(2));
+});
+els.canExtra.addEventListener("click", () => {
+  if (!canState || canState.extraUsed) return;
+  playAd("Reward: pick a second reward from this can", () => {
+    canState.allowed = 2; canState.extraUsed = true; renderCan();
+    const c = els.canCards.querySelector(".card:not([disabled])"); if (c) c.focus({ preventScroll: true });
+  });
+});
+els.canDone.addEventListener("click", () => closeSheet(els.cansheet));
+els.adCancel.addEventListener("click", cancelAd);
+els.nextDay.addEventListener("click", () => {
+  prog.dayShift = (prog.dayShift || 0) + 1; saveProgress(); renderWallet();
+  renderStudio(dailyState().ready ? "Moved the clock to tomorrow. Your daily gift is ready." : "Moved the clock to tomorrow.");
+});
+els.add.addEventListener("click", () => { addDrops(100); renderStudio("Added 100 drops for testing."); });
+els.fillCan.addEventListener("click", () => { prog.can.ready = (prog.can.ready | 0) + 1; saveProgress(); renderWallet(true); renderStudio("Added a full paint can."); });
+let resetArmed = null;
+els.reset.addEventListener("click", () => {
+  if (!resetArmed) {
+    els.reset.textContent = "Tap again to erase everything";
+    resetArmed = setTimeout(() => { resetArmed = null; els.reset.textContent = "Reset progress"; }, 4000);
+    return;
+  }
+  clearTimeout(resetArmed); resetArmed = null; els.reset.textContent = "Reset progress";
+  lastReward = null; canState = null;
+  const fresh = defaults();
+  Object.keys(prog).forEach((k) => delete prog[k]);
+  Object.assign(prog, fresh); saveProgress();
+  applySkin(); applySymbols(); applySettings(); renderWallet(); renderHintCost();
+  closeSheet(els.studio, true);
+  startLevel({ mode: "main", idx: 0 });
+  showToast("Progress reset. Back to level 1 with 40 drops.", "OK", () => {});
+});
+els.toastAct.addEventListener("click", () => { const fn = toastFn; hideToast(); if (fn) fn(); });
+[els.win, els.levels, els.studio, els.daily, els.cansheet].forEach((sh) => sh.addEventListener("click", (e) => { if (e.target === sh) closeSheet(sh); }));
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "Escape") {
+    if (!els.adsheet.hidden) cancelAd();
+    else { const top = STACK().find((s) => !s.hidden); if (top) closeSheet(top); }
+    return;
+  }
+  if (anySheetOpen()) return;
+  const k = e.key.toLowerCase();
+  if (k === "z") undo(); else if (k === "r") restart(); else if (k === "h") hint();
+});
+if (window.ResizeObserver) new ResizeObserver(() => layoutBoard()).observe(els.wrap);
+else window.addEventListener("resize", layoutBoard);
+
+function snapshot() {
+  return {
+    v: 1, ref, board: S.board, dirs: S.dirs, used: [...S.used],
+    history: S.history, coats: S.coats, undos: S.undos, hints: S.hints, won: S.won
+  };
+}
+function start(data) {
+  applySymbols(); applySkin(); applySettings(); renderWallet(); renderHintCost();
+  // The Android build script sets LC_BUILD; the web prototype leaves it undefined.
+  if (window.LC_BUILD) {
+    els.note.textContent = "Test build. Buttons marked AD play a pretend ad for now.";
+    if (window.LC_BUILD === "release") {
+      for (const sel of [".testing", "#levels-test-note"]) { const t = document.querySelector(sel); if (t) t.remove(); }
+    }
+  }
+  const saved = data && data.v === 1 && data.ref ? data : null;
+  const idx = Math.min(Math.max(prog.current | 0, 0), LEVELS.length - 1);
+  startLevel(saved ? saved.ref : { mode: "main", idx }, saved);
+  if (dailyState().ready) setTimeout(() => { if (!anySheetOpen() && !busy && els.toast.hidden) showToast("Your daily gift is ready.", "Open", openDaily); }, 500);
+  if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(snapshot);
+}
+const hot = window.claude && window.claude.hot;
+if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
+})();
+</script>
