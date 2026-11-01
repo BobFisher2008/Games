@@ -8,6 +8,9 @@ if (keystorePropsFile.exists()) {
     keystorePropsFile.withInputStream { keystoreProps.load(it) }
 }
 
+// The AdMob app id comes from ads.config.json in the project root (see README).
+def adsConfig = new groovy.json.JsonSlurper().parse(rootProject.file("../ads.config.json"))
+
 android {
     signingConfigs {
         release {
@@ -27,6 +30,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [admobAppId: adsConfig.appId]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

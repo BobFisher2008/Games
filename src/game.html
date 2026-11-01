@@ -607,6 +607,7 @@ a.toggle { color: inherit; text-decoration: none; }
       <button class="toggle" id="btn-sound" type="button" aria-pressed="true">Sound <span class="sw" aria-hidden="true"></span></button>
       <button class="toggle" id="btn-haptics" type="button" aria-pressed="true">Vibration <span class="sw" aria-hidden="true"></span></button>
       <a class="toggle" id="privacy-link" href="https://bobfisher2008.github.io/Games/last-coat/privacy.html" target="_blank" rel="noopener">Privacy policy <span class="ext" aria-hidden="true">↗</span></a>
+      <button class="toggle" id="btn-ad-privacy" type="button" hidden>Ad privacy choices <span class="ext" aria-hidden="true">›</span></button>
     </div>
     <p class="sheet-sub">Drops come from finishing canvases and the daily gift. Stars unlock milestone rewards. Some items only turn up in paint cans.</p>
     <details class="testing">
@@ -650,12 +651,12 @@ a.toggle { color: inherit; text-decoration: none; }
 
 <div class="sheet ad-sheet" id="adsheet" hidden role="dialog" aria-modal="true" aria-labelledby="ad-title">
   <div class="sheet-card ad-card">
-    <p class="eyebrow">Rewarded ad · prototype</p>
+    <p class="eyebrow" id="ad-eyebrow">Rewarded ad · prototype</p>
     <h2 id="ad-title">Ad playing</h2>
     <div class="ad-count" id="ad-count" aria-live="off">3</div>
-    <div class="ad-bar"><span id="ad-fill"></span></div>
+    <div class="ad-bar" id="ad-bar"><span id="ad-fill"></span></div>
     <p class="sheet-sub" id="ad-for"></p>
-    <p class="sheet-sub">In the real game a 15 to 30 second video plays here.</p>
+    <p class="sheet-sub" id="ad-note">In the real game a 15 to 30 second video plays here.</p>
     <button class="btn" id="btn-ad-cancel" type="button" data-autofocus>Close without reward</button>
   </div>
 </div>
@@ -929,6 +930,7 @@ const els = {
   cansheet: $("cansheet"), canTitle: $("can-title"), canSub: $("can-sub"), canCards: $("can-cards"),
   canActions: $("can-actions"), canExtra: $("btn-can-extra"), canDone: $("btn-can-done"),
   adsheet: $("adsheet"), adCount: $("ad-count"), adFill: $("ad-fill"), adFor: $("ad-for"), adCancel: $("btn-ad-cancel"),
+  adEyebrow: $("ad-eyebrow"), adTitle: $("ad-title"), adBar: $("ad-bar"), adNote: $("ad-note"), adPrivacy: $("btn-ad-privacy"),
   toast: $("toast"), toastMsg: $("toast-msg"), toastAct: $("toast-act"),
   soundBtn: $("btn-sound"), hapticsBtn: $("btn-haptics"), note: $("note")
 };
@@ -1532,27 +1534,48 @@ function grant(rw) {
   saveProgress(); renderWallet(true); renderHintCost();
 }
 
-/* ---------- Pretend rewarded ad ---------- */
-let adTimer = null;
+/* ---------- Rewarded ad ---------- */
+// The Android app provides window.LC_ADS (AdMob). Without it, as in the web
+// prototype, a pretend 3-second ad plays instead.
+let adTimer = null, adRun = 0;
+function adRewarded(onReward) { prog.ads = (prog.ads | 0) + 1; saveProgress(); onReward(); }
 function playAd(forText, onReward) {
-  const total = 3000, t0 = Date.now();
+  const ads = window.LC_ADS, run = ++adRun;
+  clearInterval(adTimer); adTimer = null;
   els.adFor.textContent = forText;
+  els.adCount.hidden = els.adBar.hidden = els.adNote.hidden = !!ads;
+  if (ads) {
+    els.adEyebrow.textContent = "Rewarded ad"; els.adTitle.textContent = "Loading ad…";
+    openSheet(els.adsheet);
+    ads.ready().then((ok) => {
+      if (run !== adRun) return; // cancelled while loading
+      if (!ok) { closeSheet(els.adsheet); showToast("No ad available right now. Try again in a minute.", "OK", () => {}); return; }
+      return ads.show().then((result) => {
+        if (run !== adRun) return;
+        adRun++; closeSheet(els.adsheet);
+        if (result === "rewarded") adRewarded(onReward);
+        else if (result === "closed") showToast("The reward comes after the whole ad.", "OK", () => {});
+        else showToast("The ad didn't play. Try again in a minute.", "OK", () => {});
+      });
+    });
+    return;
+  }
+  const total = 3000, t0 = Date.now();
+  els.adEyebrow.textContent = "Rewarded ad · prototype"; els.adTitle.textContent = "Ad playing";
   els.adCount.textContent = "3"; els.adFill.style.width = "0%";
   openSheet(els.adsheet);
-  clearInterval(adTimer);
   adTimer = setInterval(() => {
     const el = Date.now() - t0;
     els.adCount.textContent = Math.max(0, Math.ceil((total - el) / 1000));
     els.adFill.style.width = Math.min(100, (el / total) * 100) + "%";
     if (el >= total) {
       clearInterval(adTimer); adTimer = null;
-      prog.ads = (prog.ads | 0) + 1; saveProgress();
       closeSheet(els.adsheet);
-      onReward();
+      adRewarded(onReward);
     }
   }, 100);
 }
-function cancelAd() { clearInterval(adTimer); adTimer = null; closeSheet(els.adsheet); }
+function cancelAd() { adRun++; clearInterval(adTimer); adTimer = null; closeSheet(els.adsheet); }
 
 /* ---------- Daily gift ---------- */
 function openDaily() { hideToast(); renderDaily(); openSheet(els.daily); }
@@ -1605,6 +1628,8 @@ function applySkin() {
 }
 function renderStudio(msg) {
   els.studioDrops.textContent = prog.drops;
+  // Shown only where the law requires a way to change ad consent (EEA, UK).
+  els.adPrivacy.hidden = !(window.LC_ADS && window.LC_ADS.privacyRequired());
   if (msg !== undefined) els.studioMsg.textContent = msg;
   const cans = prog.can.ready | 0;
   els.studioInv.innerHTML =
@@ -1637,7 +1662,7 @@ function renderStudio(msg) {
     : `<span>Daily gift collected. Streak: day ${st.day} of 7.</span><button class="btn" type="button">View</button>`;
   els.studioDaily.querySelector("button").addEventListener("click", openDaily);
   const c = prog.choices;
-  els.adsCount.textContent = `Pretend ads watched: ${prog.ads || 0}. On the win screen you chose Double it ${plural(c.doubled | 0, "time")} and Skip ${plural(c.skipped | 0, "time")}.`;
+  els.adsCount.textContent = `Ads watched: ${prog.ads || 0}. On the win screen you chose Double it ${plural(c.doubled | 0, "time")} and Skip ${plural(c.skipped | 0, "time")}.`;
 }
 function onItem(slot, item) {
   const refocus = () => { const b = itemBox[slot].querySelector(`[data-id="${item.id}"]`); if (b) b.focus({ preventScroll: true }); };
@@ -1796,6 +1821,7 @@ els.canExtra.addEventListener("click", () => {
 });
 els.canDone.addEventListener("click", () => closeSheet(els.cansheet));
 els.adCancel.addEventListener("click", cancelAd);
+els.adPrivacy.addEventListener("click", () => { if (window.LC_ADS) window.LC_ADS.privacyOptions(); });
 els.nextDay.addEventListener("click", () => {
   prog.dayShift = (prog.dayShift || 0) + 1; saveProgress(); renderWallet();
   renderStudio(dailyState().ready ? "Moved the clock to tomorrow. Your daily gift is ready." : "Moved the clock to tomorrow.");
@@ -1845,7 +1871,10 @@ function start(data) {
   applySymbols(); applySkin(); applySettings(); renderWallet(); renderHintCost();
   // The Android build script sets LC_BUILD; the web prototype leaves it undefined.
   if (window.LC_BUILD) {
-    els.note.textContent = "Test build. Buttons marked AD play a pretend ad for now.";
+    const ads = window.LC_ADS;
+    els.note.textContent = !ads ? "Test build. Buttons marked AD play a pretend ad for now."
+      : ads.testing ? "Test build. Buttons marked AD show a Google test ad." : "";
+    els.note.hidden = !els.note.textContent;
     if (window.LC_BUILD === "release") {
       for (const sel of [".testing", "#levels-test-note"]) { const t = document.querySelector(sel); if (t) t.remove(); }
     }

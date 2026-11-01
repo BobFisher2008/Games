@@ -61,8 +61,8 @@ First test build. Thank you for testing Last Coat! Play a few canvases when you 
 | Tags | The closest matches to logic and puzzle from Google's list |
 | Contact email | Your email for player support (shown publicly) |
 | Privacy policy | https://bobfisher2008.github.io/Games/last-coat/privacy.html |
-| Data safety | While the build has only pretend ads: "No data collected or shared". When AdMob is added, declare what its SDK collects (device or other IDs, approximate location, app interactions, diagnostics) for advertising and fraud prevention. |
-| Ads | Answer "No" while the build only has pretend ads. Switch to "Yes" in the release that adds AdMob. |
+| Data safety | The game itself collects nothing, but the AdMob SDK does. Declare what Google lists for it on https://developers.google.com/admob/android/privacy/play-data-disclosure (advertising ID and other device IDs, approximate location from IP, ad interactions, diagnostics), used for advertising and fraud prevention. |
+| Ads | Yes. The app contains AdMob rewarded ads. |
 | Target audience | 13+ keeps the ad setup simple. Including under-13s brings Google's Families policy rules for ads. |
 | Content rating | Fill in the questionnaire honestly. A puzzle game with no violence or chat usually gets the lowest rating. |
 

@@ -4,6 +4,7 @@
 //  - swaps Google Fonts for font files bundled from @fontsource, so the game works offline
 //  - mirrors saved progress into Capacitor Preferences (native storage) and maps the
 //    Android back button to "close the open panel", then minimises the app
+//  - adds rewarded ads (AdMob) as window.LC_ADS; ids come from ads.config.json
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, rmSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -61,6 +62,23 @@ body =
   "});</script>" +
   body.slice(scriptClose + "</script>".length);
 
+// 3. Rewarded ads (AdMob). Debug builds always use Google's test ad, so testing on
+// your own phone never touches real ads. Release builds use ads.config.json.
+const ADS = JSON.parse(readFileSync(join(root, "ads.config.json"), "utf8"));
+const GOOGLE_TEST_PUB = "ca-app-pub-3940256099942544";
+const GOOGLE_TEST_REWARDED = GOOGLE_TEST_PUB + "/5224354917";
+if (!/^ca-app-pub-\d{16}~\d{10}$/.test(ADS.appId || "")) throw new Error("ads.config.json: appId should look like ca-app-pub-0000000000000000~0000000000");
+if (!/^ca-app-pub-\d{16}\/\d{10}$/.test(ADS.rewardedId || "")) throw new Error("ads.config.json: rewardedId should look like ca-app-pub-0000000000000000/0000000000");
+if (ADS.appId.split("~")[0] !== ADS.rewardedId.split("/")[0]) throw new Error("ads.config.json: appId and rewardedId come from different AdMob accounts");
+const rewardedId = BUILD === "release" ? ADS.rewardedId : GOOGLE_TEST_REWARDED;
+const adsTesting = rewardedId.startsWith(GOOGLE_TEST_PUB + "/");
+if (BUILD === "release" && adsTesting) console.warn("Note: this release build shows Google test ads. Put your own AdMob ids in ads.config.json before going live.");
+// Debug only, optional: LC_CONSENT_TEST_DEVICE=<id from logcat> makes this phone act as if it's in
+// the EEA so the consent form can be checked.
+const consentOpts = BUILD === "debug" && process.env.LC_CONSENT_TEST_DEVICE
+  ? { debugGeography: 1, testDeviceIdentifiers: [process.env.LC_CONSENT_TEST_DEVICE] }
+  : {};
+
 const bootstrap = `<script>window.LC_BUILD = ${JSON.stringify(BUILD)};</script>
 <script>
 (function () {
@@ -91,6 +109,70 @@ const bootstrap = `<script>window.LC_BUILD = ${JSON.stringify(BUILD)};</script>
         App.exitApp();
       }
     });
+  }
+  // Rewarded ads. The game calls window.LC_ADS when it exists and falls back to its
+  // pretend ad otherwise (web prototype). Consent (EEA/UK) is asked at launch via
+  // Google's consent form, before any ad is requested.
+  var AdMob = plugins.AdMob;
+  if (native && AdMob) {
+    var AD_ID = ${JSON.stringify(rewardedId)};
+    var canAds = false, privacyRequired = false, setupFailed = false, loaded = false, loading = null;
+    var runSetup = function () {
+      setupFailed = false;
+      return AdMob.requestConsentInfo(${JSON.stringify(consentOpts)})
+        .then(function (info) {
+          return info.status === "REQUIRED" && info.isConsentFormAvailable ? AdMob.showConsentForm() : info;
+        })
+        .then(function (info) {
+          canAds = !!info.canRequestAds;
+          privacyRequired = info.privacyOptionsRequirementStatus === "REQUIRED";
+          if (canAds) return AdMob.initialize({ maxAdContentRating: "Teen" }).then(function () { load(); });
+        })
+        .catch(function () { setupFailed = true; });
+    };
+    var load = function () {
+      if (loaded) return Promise.resolve(true);
+      if (!loading) {
+        loading = AdMob.prepareRewardVideoAd({ adId: AD_ID })
+          .then(function () { loaded = true; return true; }, function () { return false; })
+          .then(function (ok) { loading = null; return ok; });
+      }
+      return loading;
+    };
+    var setup = runSetup();
+    window.LC_ADS = {
+      testing: ${JSON.stringify(adsTesting)},
+      // Resolves true when an ad is loaded and ready to show (gives up after 12 seconds).
+      ready: function () {
+        if (setupFailed) setup = runSetup();
+        return setup.then(function () {
+          if (!canAds) return false;
+          return Promise.race([load(), new Promise(function (r) { setTimeout(function () { r(false); }, 12000); })]);
+        });
+      },
+      // Resolves "rewarded", "closed" (closed early) or "failed".
+      show: function () {
+        return new Promise(function (resolve) {
+          var rewarded = false, finished = false, handles = [];
+          var done = function (result) {
+            if (finished) return;
+            finished = true; loaded = false;
+            handles.forEach(function (h) { h.then(function (x) { x.remove(); }).catch(function () {}); });
+            resolve(result);
+            setTimeout(load, 1000);
+          };
+          handles.push(AdMob.addListener("onRewardedVideoAdReward", function () { rewarded = true; }));
+          handles.push(AdMob.addListener("onRewardedVideoAdDismissed", function () {
+            // The reward event can arrive just after the ad closes.
+            setTimeout(function () { done(rewarded ? "rewarded" : "closed"); }, 300);
+          }));
+          handles.push(AdMob.addListener("onRewardedVideoAdFailedToShow", function () { done("failed"); }));
+          AdMob.showRewardVideoAd().then(function () { rewarded = true; }, function () { done("failed"); });
+        });
+      },
+      privacyRequired: function () { return privacyRequired; },
+      privacyOptions: function () { return AdMob.showPrivacyOptionsForm().catch(function () {}); }
+    };
   }
   window.__lcBoot = function (start) { ready.then(start, start); };
 })();
