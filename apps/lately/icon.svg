@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Lately: a chore's fill meter with the notch where it falls due. Full-bleed square so it also works as a maskable icon. -->
+  <rect width="512" height="512" fill="#23634A"/>
+  <rect x="112" y="226" width="288" height="60" rx="30" fill="#FFFFFF" fill-opacity=".28"/>
+  <rect x="112" y="226" width="196" height="60" rx="30" fill="#FFFFFF"/>
+  <rect x="337" y="196" width="14" height="120" rx="7" fill="#F2C774"/>
+</svg>

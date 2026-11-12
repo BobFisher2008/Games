@@ -1,0 +1,816 @@
+<title>Lately</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one narrow column, like a list stuck to the fridge. Today's summary on top, then Due / Coming up / Later. Each chore carries a fill meter: how far through its interval it is, with a notch where it falls due. */
+:root {
+  --paper: #F1F4F2;
+  --card: #FFFFFF;
+  --ink: #18221D;
+  --muted: #56645C;
+  --line: #D5DCD7;
+  --accent: #23634A;
+  --accent-ink: #FFFFFF;
+  --accent-wash: #E1EEE7;
+  --due: #D9951E;
+  --due-ink: #7E520A;
+  --due-wash: #FBEFD8;
+  --track: #E4E9E5;
+  --scrim: rgba(16, 24, 20, .44);
+  --shadow: 0 1px 0 rgba(24, 34, 29, .04), 0 10px 28px -18px rgba(24, 34, 29, .45);
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121815; --card: #1B231F; --ink: #E5ECE7; --muted: #9AABA1; --line: #2D3832;
+    --accent: #7FCBA6; --accent-ink: #0C1E15; --accent-wash: #1E3329;
+    --due: #E8AA3C; --due-ink: #F2C774; --due-wash: #2E2618; --track: #26302B;
+    --scrim: rgba(0, 0, 0, .6); --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 12px 30px -18px rgba(0, 0, 0, .8);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121815; --card: #1B231F; --ink: #E5ECE7; --muted: #9AABA1; --line: #2D3832;
+  --accent: #7FCBA6; --accent-ink: #0C1E15; --accent-wash: #1E3329;
+  --due: #E8AA3C; --due-ink: #F2C774; --due-wash: #2E2618; --track: #26302B;
+  --scrim: rgba(0, 0, 0, .6); --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 12px 30px -18px rgba(0, 0, 0, .8);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 16px/1.45 var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap {
+  max-width: 560px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 120px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* Header */
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.top-text { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.brand { font: 800 15px/1 var(--font-display); letter-spacing: .02em; color: var(--accent); }
+.today { margin: 0; font: 800 clamp(28px, 7.4vw, 38px)/1.05 var(--font-display); letter-spacing: -.01em; text-wrap: balance; }
+.sub { margin: 0; color: var(--muted); }
+.ghost {
+  border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+  padding: 8px 14px; font-weight: 700; font-size: 14px; white-space: nowrap;
+}
+.ghost:hover { border-color: var(--muted); }
+
+.banner {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; justify-content: space-between;
+  background: var(--accent-wash); border-radius: 12px; padding: 12px 14px; font-size: 15px;
+}
+.banner p { margin: 0; min-width: 0; flex: 1 1 220px; }
+.linkbtn { border: 0; background: none; padding: 4px 0; color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Sections */
+.section { display: flex; flex-direction: column; gap: 10px; }
+.section-head { display: flex; align-items: baseline; gap: 8px; margin: 0; font: 700 13px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.section-head .count { font-family: var(--font-num); letter-spacing: 0; }
+details.section > summary { list-style: none; cursor: pointer; padding: 4px 0; }
+details.section > summary::-webkit-details-marker { display: none; }
+details.section > summary::after { content: "Show"; margin-left: auto; text-transform: none; letter-spacing: 0; color: var(--accent); }
+details.section[open] > summary::after { content: "Hide"; }
+.list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+/* Chore card */
+.chore {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  background: var(--card); border-radius: 12px; padding: 12px 12px 12px 14px;
+  box-shadow: var(--shadow); border: 1px solid transparent;
+}
+.chore.is-due { border-color: color-mix(in srgb, var(--due) 45%, transparent); }
+.chore-main { border: 0; background: none; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.chore-name { font-weight: 700; font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.chore-meta { color: var(--muted); font-size: 14px; display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.chore-when { font-size: 14px; font-weight: 700; }
+.is-due .chore-when { color: var(--due-ink); }
+.is-soon .chore-when { color: var(--accent); }
+.is-later .chore-when { color: var(--muted); font-weight: 400; }
+
+.meter { position: relative; display: block; height: 6px; border-radius: 3px; background: var(--track); overflow: visible; }
+.meter .fill { position: absolute; inset: 0 auto 0 0; width: var(--w, 0%); border-radius: 3px; background: var(--accent); }
+.is-due .meter .fill { background: var(--due); }
+.meter .notch { position: absolute; top: -3px; bottom: -3px; left: 80%; width: 2px; border-radius: 1px; background: var(--muted); }
+
+.done-btn {
+  border: 0; border-radius: 999px; padding: 10px 16px; min-width: 76px; min-height: 44px;
+  background: var(--accent); color: var(--accent-ink); font-weight: 700;
+}
+.is-later .done-btn, .is-soon .done-btn { background: var(--accent-wash); color: var(--accent); }
+.done-btn:active { transform: scale(.97); }
+
+.empty { background: var(--card); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; }
+.empty h2 { margin: 0; font: 800 20px/1.2 var(--font-display); }
+.empty p { margin: 0; color: var(--muted); }
+
+.fab {
+  position: fixed; z-index: 5;
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  border: 0; border-radius: 999px; padding: 14px 22px; min-height: 52px;
+  background: var(--ink); color: var(--paper); font-weight: 700; font-size: 16px;
+  box-shadow: 0 12px 28px -12px rgba(0, 0, 0, .55);
+}
+.privacy { margin: 0; color: var(--muted); font-size: 13px; text-align: center; }
+
+/* Setup */
+.setup-head { display: flex; flex-direction: column; gap: 6px; }
+.step { margin: 0; font: 500 13px/1 var(--font-num); color: var(--muted); }
+.setup-title { margin: 0; font: 800 clamp(26px, 7vw, 34px)/1.1 var(--font-display); text-wrap: balance; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.group h3 { margin: 0; font: 700 13px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: baseline; gap: 6px; border: 1px solid var(--line); background: var(--card);
+  border-radius: 999px; padding: 9px 14px; min-height: 44px; text-align: left;
+}
+.chip small { color: var(--muted); font-size: 13px; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip[aria-pressed="true"] small { color: inherit; opacity: .85; }
+.chip[aria-pressed="true"]::before { content: "✓"; font-weight: 700; }
+.own { display: flex; gap: 8px; }
+.own input { flex: 1; min-width: 0; }
+.footer-bar {
+  position: fixed; z-index: 5; left: 0; right: 0; bottom: 0;
+  background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+  padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.footer-inner { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.primary {
+  border: 0; border-radius: 999px; padding: 13px 22px; min-height: 48px;
+  background: var(--accent); color: var(--accent-ink); font-weight: 700;
+}
+.primary:disabled { opacity: .45; cursor: not-allowed; }
+.secondary { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 12px 18px; min-height: 48px; font-weight: 700; }
+.danger { border: 1px solid var(--due); background: var(--due-wash); color: var(--due-ink); border-radius: 999px; padding: 12px 18px; min-height: 48px; font-weight: 700; }
+
+.when-row { background: var(--card); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+.when-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; }
+.when-top strong { min-width: 0; overflow-wrap: anywhere; }
+.seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: var(--track); border-radius: 10px; padding: 3px; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg span { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 40px; padding: 4px 4px; border-radius: 8px; font-size: 13px; line-height: 1.15; }
+.seg input:checked + span { background: var(--card); font-weight: 700; box-shadow: 0 1px 2px rgba(0, 0, 0, .15); }
+.seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+/* Form fields */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > span, .field > label { font-weight: 700; font-size: 14px; }
+input[type="text"], input[type="date"], input[type="number"], select, textarea {
+  border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 10px 12px; min-height: 46px; width: 100%;
+}
+textarea { min-height: 120px; font: 13px/1.4 var(--font-num); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { flex: 1 1 140px; min-width: 0; }
+.error { color: var(--due-ink); font-weight: 700; font-size: 14px; margin: 0; }
+.mini { font-size: 14px; color: var(--muted); margin: 0; }
+
+/* Sheet */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 20; }
+.sheet {
+  position: fixed; z-index: 21; left: 0; right: 0; bottom: 0;
+  max-height: 88%; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--paper); border-radius: 18px 18px 0 0;
+  padding-top: 8px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.sheet-inner { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.grabber { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 4px; }
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.sheet-head h2 { margin: 0; font: 800 24px/1.15 var(--font-display); overflow-wrap: anywhere; min-width: 0; }
+.close { border: 0; background: var(--track); border-radius: 999px; width: 40px; height: 40px; flex: none; font-size: 20px; line-height: 1; }
+.panel { background: var(--card); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.panel h3 { margin: 0; font: 700 13px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.status-big { font-weight: 700; font-size: 18px; }
+.is-due .status-big { color: var(--due-ink); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions > button { flex: 1 1 auto; }
+.suggest { background: var(--accent-wash); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.suggest p { margin: 0; }
+.history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.history li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.history li:first-child { border-top: 0; }
+.history .gap { color: var(--muted); font-size: 14px; }
+.x { border: 0; background: none; color: var(--muted); padding: 6px 8px; font-size: 14px; text-decoration: underline; }
+.confirm { background: var(--due-wash); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.confirm p { margin: 0; }
+
+/* Toast */
+.toast {
+  position: fixed; z-index: 30; left: 50%; transform: translateX(-50%);
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  width: min(520px, calc(100% - 32px));
+  background: var(--ink); color: var(--paper); border-radius: 12px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px; justify-content: space-between;
+  box-shadow: 0 16px 32px -14px rgba(0, 0, 0, .6);
+}
+.toast p { margin: 0; min-width: 0; }
+.toast button { border: 0; background: none; color: var(--paper); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; padding: 6px 4px; flex: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: rise .22s ease-out; }
+  .chore.just-done { animation: settle .5s ease-out; }
+  @keyframes rise { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+  @keyframes settle { from { background: var(--accent-wash); } to { background: var(--card); } }
+}
+</style>
+
+<div id="app"></div>
+<div id="scrim" class="scrim" hidden></div>
+<div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden><p id="toast-msg"></p><button id="toast-act" type="button">Undo</button></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------- Dates: everything is a local calendar day, "YYYY-MM-DD" ---------- */
+const pad = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => ymd(new Date());
+const parts = (s) => s.split("-").map(Number);
+const dayNum = (s) => { const [y, m, d] = parts(s); return Math.round(Date.UTC(y, m - 1, d) / 86400000); };
+const fromDayNum = (n) => { const d = new Date(n * 86400000); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; };
+const addDays = (s, n) => fromDayNum(dayNum(s) + n);
+const daysBetween = (a, b) => dayNum(b) - dayNum(a);
+function addMonths(s, n) {
+  const [y, m, d] = parts(s);
+  const total = (m - 1) + n;
+  const ty = y + Math.floor(total / 12), tm = ((total % 12) + 12) % 12;
+  const last = new Date(Date.UTC(ty, tm + 1, 0)).getUTCDate();
+  return `${ty}-${pad(tm + 1)}-${pad(Math.min(d, last))}`;
+}
+function addInterval(s, every) {
+  if (every.u === "m") return addMonths(s, every.n);
+  return addDays(s, every.u === "w" ? every.n * 7 : every.n);
+}
+const intervalDays = (every) => every.u === "m" ? every.n * 30.44 : every.u === "w" ? every.n * 7 : every.n;
+
+const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WD_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MO_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const dowOf = (s) => new Date(Date.UTC(...(([y, m, d]) => [y, m - 1, d])(parts(s)))).getUTCDay();
+const shortDate = (s) => { const [, m, d] = parts(s); return `${WD[dowOf(s)]} ${d} ${MO[m - 1]}`; };
+const longDate = (s) => { const [, m, d] = parts(s); return `${WD_LONG[dowOf(s)]} ${d} ${MO_LONG[m - 1]}`; };
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+function everyLabel(every) {
+  const { n, u } = every;
+  if (u === "d") return n === 1 ? "Every day" : `Every ${n} days`;
+  if (u === "w") return n === 1 ? "Every week" : `Every ${n} weeks`;
+  if (n === 12) return "Every year";
+  return n === 1 ? "Every month" : `Every ${n} months`;
+}
+const INTERVALS = [[1, "d"], [2, "d"], [3, "d"], [4, "d"], [5, "d"], [1, "w"], [10, "d"], [2, "w"], [3, "w"], [1, "m"], [6, "w"], [2, "m"], [3, "m"], [6, "m"], [12, "m"]]
+  .map(([n, u]) => ({ n, u }));
+const everyKey = (e) => `${e.n}${e.u}`;
+const keyEvery = (k) => ({ n: parseInt(k, 10), u: k.slice(-1) });
+
+/* ---------- Status of one chore on a given day ---------- */
+function lastDone(c) { return c.history.length ? c.history[c.history.length - 1] : null; }
+function statusOf(c, t) {
+  const last = lastDone(c);
+  const I = intervalDays(c.every);
+  if (!last) return { kind: "due", dueOn: t, daysLeft: 0, over: 0, progress: 1, never: true };
+  let dueOn = addInterval(last, c.every);
+  if (c.snooze && c.snooze > dueOn) dueOn = c.snooze;
+  const daysLeft = daysBetween(t, dueOn);
+  const elapsed = daysBetween(last, t);
+  const soonWindow = Math.min(7, Math.max(1, Math.round(I * 0.3)));
+  const kind = daysLeft <= 0 ? "due" : daysLeft <= soonWindow ? "soon" : "later";
+  return { kind, dueOn, daysLeft, over: Math.max(0, -daysLeft), progress: elapsed / I, elapsed, never: false };
+}
+function whenText(st) {
+  if (st.never) return "Due now · not logged yet";
+  if (st.kind === "due") return st.over === 0 ? "Due today" : st.over === 1 ? "Due since yesterday" : `Due ${plural(st.over, "day")} ago`;
+  if (st.daysLeft === 1) return "Due tomorrow";
+  return `Due in ${plural(st.daysLeft, "day")}`;
+}
+function lastText(c, t) {
+  const last = lastDone(c);
+  if (!last) return "Not logged yet";
+  const ago = daysBetween(last, t);
+  return ago === 0 ? "Done today" : ago === 1 ? "Done yesterday" : `Done ${plural(ago, "day")} ago`;
+}
+// Learned rhythm: if the last few gaps disagree with the chosen interval, suggest the real one.
+function rhythmOf(c) {
+  const h = c.history;
+  if (h.length < 4) return null;
+  const gaps = [];
+  for (let i = Math.max(1, h.length - 6); i < h.length; i++) gaps.push(daysBetween(h[i - 1], h[i]));
+  const sorted = gaps.slice().sort((a, b) => a - b);
+  const med = sorted[Math.floor(sorted.length / 2)];
+  const I = intervalDays(c.every);
+  if (med < 1 || Math.abs(med - I) < Math.max(2, I * 0.25)) return null;
+  let every;
+  if (med >= 28) every = { n: Math.max(1, Math.round(med / 30.44)), u: "m" };
+  else if (med >= 7 && med % 7 === 0) every = { n: med / 7, u: "w" };
+  else every = { n: med, u: "d" };
+  if (everyKey(every) === everyKey(c.every)) return null;
+  return { days: med, every };
+}
+
+/* ---------- Suggested chores for setup ---------- */
+const AREAS = ["Home", "Kitchen", "Laundry", "Plants & pets", "Self-care", "Car & admin"];
+const CATALOG = [
+  ["Vacuum floors", "Home", 1, "w"], ["Clean bathroom", "Home", 1, "w"], ["Change bedsheets", "Home", 2, "w"],
+  ["Dust shelves", "Home", 2, "w"], ["Test smoke alarm", "Home", 1, "m"],
+  ["Wipe down fridge", "Kitchen", 1, "m"], ["Descale kettle", "Kitchen", 1, "m"], ["Clean oven", "Kitchen", 3, "m"],
+  ["Wash towels", "Laundry", 1, "w"], ["Clean washing machine", "Laundry", 1, "m"],
+  ["Water plants", "Plants & pets", 4, "d"], ["Deep-clean litter box", "Plants & pets", 2, "w"], ["Flea treatment for pet", "Plants & pets", 1, "m"],
+  ["Replace toothbrush", "Self-care", 3, "m"], ["Cut nails", "Self-care", 2, "w"], ["Haircut", "Self-care", 6, "w"],
+  ["Check tyre pressure", "Car & admin", 1, "m"], ["Back up phone photos", "Car & admin", 1, "m"], ["Review subscriptions", "Car & admin", 3, "m"]
+].map(([name, area, n, u]) => ({ name, area, every: { n, u } }));
+
+/* ---------- State ---------- */
+const KEY = "lately-v1";
+let S = null;
+const blank = () => ({ v: 1, setup: false, sample: false, chores: [] });
+function valid(s) {
+  return s && s.v === 1 && Array.isArray(s.chores) && s.chores.every((c) =>
+    c && typeof c.id === "string" && typeof c.name === "string" && c.every && Array.isArray(c.history));
+}
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { const s = JSON.parse(raw); if (valid(s)) return s; } } catch (e) { /* storage unavailable */ }
+  return blank();
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+const uid = () => Math.random().toString(36).slice(2, 10);
+const find = (id) => S.chores.find((c) => c.id === id);
+
+function sampleState() {
+  const t = today();
+  const mk = (name, area, n, u, ago) => ({
+    id: uid(), name, area, every: { n, u }, snooze: null,
+    history: ago.slice().sort((a, b) => b - a).map((a) => addDays(t, -a))
+  });
+  return {
+    v: 1, setup: true, sample: true, chores: [
+      mk("Water plants", "Plants & pets", 4, "d", [14, 10, 6]),
+      mk("Wash towels", "Laundry", 1, "w", [15, 8]),
+      mk("Descale kettle", "Kitchen", 1, "m", [70, 38]),
+      mk("Check tyre pressure", "Car & admin", 1, "m", []),
+      mk("Change bedsheets", "Home", 2, "w", [41, 31, 20, 10]),
+      mk("Clean bathroom", "Home", 1, "w", [12, 5]),
+      mk("Back up phone photos", "Car & admin", 1, "m", [25]),
+      mk("Vacuum floors", "Home", 1, "w", [9, 3]),
+      mk("Wipe down fridge", "Kitchen", 1, "m", [12]),
+      mk("Replace toothbrush", "Self-care", 3, "m", [61])
+    ]
+  };
+}
+
+/* ---------- Helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+const app = $("app");
+function intervalOptions(selected) {
+  const list = INTERVALS.slice();
+  if (selected && !list.some((e) => everyKey(e) === everyKey(selected))) list.push(selected);
+  return list.map((e) => `<option value="${everyKey(e)}"${selected && everyKey(e) === everyKey(selected) ? " selected" : ""}>${everyLabel(e)}</option>`).join("");
+}
+const areaOptions = (sel) => AREAS.map((a) => `<option${a === sel ? " selected" : ""}>${esc(a)}</option>`).join("");
+
+/* ---------- Toast with undo ---------- */
+let toastTimer = null, toastFn = null;
+function toast(msg, undoState) {
+  $("toast-msg").textContent = msg;
+  const act = $("toast-act");
+  act.hidden = !undoState;
+  toastFn = undoState ? () => { S = JSON.parse(undoState); save(); render(); hideToast(); toast("Undone."); } : null;
+  $("toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, undoState ? 6000 : 3000);
+}
+function hideToast() { $("toast").hidden = true; toastFn = null; }
+$("toast-act").addEventListener("click", () => { if (toastFn) toastFn(); });
+
+/* ---------- Setup: pick chores, then say when you last did them ---------- */
+let setupPicked = new Map();   // name -> { name, area, every, own }
+let setupStep = 1;
+let setupWhen = {};            // name -> "today" | "week" | "lastweek" | "unknown"
+
+function renderSetup() {
+  if (setupStep === 2) return renderSetupWhen();
+  const own = [...setupPicked.values()].filter((p) => p.own);
+  const groups = AREAS.map((area) => {
+    const items = CATALOG.filter((c) => c.area === area);
+    return `<div class="group"><h3>${esc(area)}</h3><div class="chips">${items.map((c) => chipHTML(c)).join("")}</div></div>`;
+  }).join("");
+  app.innerHTML = `
+  <div class="wrap">
+    <header class="setup-head">
+      <p class="brand">Lately</p>
+      <p class="step">Step 1 of 2</p>
+      <h1 class="setup-title">What do you need to do every so often?</h1>
+      <p class="sub">Tap the ones that apply. You can change how often later.</p>
+    </header>
+    ${groups}
+    <div class="group">
+      <h3>Your own</h3>
+      ${own.length ? `<div class="chips">${own.map((c) => chipHTML(c)).join("")}</div>` : ""}
+      <form class="own" id="own-form">
+        <input type="text" id="own-name" aria-label="Add something else" placeholder="Something else, e.g. Clean gutters" maxlength="60" autocomplete="off">
+        <button type="submit" class="secondary">Add</button>
+      </form>
+    </div>
+    <button type="button" class="linkbtn" id="try-sample">Just looking? Try it with sample chores</button>
+  </div>
+  <div class="footer-bar"><div class="footer-inner">
+    <span class="mini" id="pick-count">${setupPicked.size ? plural(setupPicked.size, "chore") + " picked" : "Pick at least one"}</span>
+    <button type="button" class="primary" id="setup-next"${setupPicked.size ? "" : " disabled"}>Next</button>
+  </div></div>`;
+  app.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+    const name = b.dataset.name;
+    if (setupPicked.has(name)) setupPicked.delete(name);
+    else { const c = CATALOG.find((x) => x.name === name); setupPicked.set(name, { ...c, every: { ...c.every } }); }
+    b.setAttribute("aria-pressed", String(setupPicked.has(name)));
+    if (!setupPicked.has(name) && b.dataset.own) b.remove();
+    updatePickCount();
+  }));
+  $("own-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = $("own-name").value.trim().replace(/\s+/g, " ");
+    if (!name) { $("own-name").focus(); return; }
+    if (!setupPicked.has(name)) setupPicked.set(name, { name, area: "Home", every: { n: 1, u: "w" }, own: true });
+    renderSetup();
+    $("own-name").focus();
+  });
+  $("setup-next").addEventListener("click", () => { setupStep = 2; render(); window.scrollTo(0, 0); });
+  $("try-sample").addEventListener("click", () => { S = sampleState(); save(); render(); window.scrollTo(0, 0); });
+}
+function chipHTML(c) {
+  const on = setupPicked.has(c.name);
+  const every = (setupPicked.get(c.name) || c).every;
+  return `<button type="button" class="chip" data-name="${esc(c.name)}"${c.own ? ' data-own="1"' : ""} aria-pressed="${on}">${esc(c.name)} <small>${esc(everyLabel(every).toLowerCase())}</small></button>`;
+}
+function updatePickCount() {
+  $("pick-count").textContent = setupPicked.size ? plural(setupPicked.size, "chore") + " picked" : "Pick at least one";
+  $("setup-next").disabled = !setupPicked.size;
+}
+
+const WHEN_OPTS = [["today", "Today"], ["week", "This week"], ["lastweek", "Last week"], ["unknown", "Can't remember"]];
+function renderSetupWhen() {
+  const picked = [...setupPicked.values()];
+  app.innerHTML = `
+  <div class="wrap">
+    <header class="setup-head">
+      <p class="brand">Lately</p>
+      <p class="step">Step 2 of 2</p>
+      <h1 class="setup-title">When did you last do each one?</h1>
+      <p class="sub">A rough guess is fine. Anything you can't remember shows up as due, so you can start fresh.</p>
+    </header>
+    <ul class="list">
+      ${picked.map((p, i) => `
+      <li class="when-row">
+        <div class="when-top">
+          <strong>${esc(p.name)}</strong>
+          <select id="every-${i}" data-name="${esc(p.name)}" aria-label="How often: ${esc(p.name)}">${intervalOptions(p.every)}</select>
+        </div>
+        <div class="seg" role="radiogroup" aria-label="Last done: ${esc(p.name)}">
+          ${WHEN_OPTS.map(([v, label]) => `<label><input type="radio" name="when-${i}" value="${v}" data-name="${esc(p.name)}"${(setupWhen[p.name] || "unknown") === v ? " checked" : ""}><span>${label}</span></label>`).join("")}
+        </div>
+      </li>`).join("")}
+    </ul>
+  </div>
+  <div class="footer-bar"><div class="footer-inner">
+    <button type="button" class="secondary" id="setup-back">Back</button>
+    <button type="button" class="primary" id="setup-finish">Show my list</button>
+  </div></div>`;
+  app.querySelectorAll("select[data-name]").forEach((s) => s.addEventListener("change", () => {
+    setupPicked.get(s.dataset.name).every = keyEvery(s.value);
+  }));
+  app.querySelectorAll('input[type="radio"]').forEach((r) => r.addEventListener("change", () => { setupWhen[r.dataset.name] = r.value; }));
+  $("setup-back").addEventListener("click", () => { setupStep = 1; render(); });
+  $("setup-finish").addEventListener("click", finishSetup);
+}
+function finishSetup() {
+  const t = today();
+  const back = { today: 0, week: 3, lastweek: 9 };
+  S = {
+    v: 1, setup: true, sample: false,
+    chores: [...setupPicked.values()].map((p) => {
+      const w = setupWhen[p.name] || "unknown";
+      let history = [];
+      if (w in back) history = [addDays(t, -back[w])];
+      return { id: uid(), name: p.name, area: p.area, every: p.every, history, snooze: null };
+    })
+  };
+  setupPicked = new Map(); setupWhen = {}; setupStep = 1;
+  save(); render(); window.scrollTo(0, 0);
+  toast("Your list is ready. Tap Done when you finish something.");
+}
+
+/* ---------- Main list ---------- */
+function render() {
+  if (!S.setup) return renderSetup();
+  const t = today();
+  const rows = S.chores.map((c) => ({ c, st: statusOf(c, t) }));
+  // Sort by how far through its own cycle each chore is, so a yearly job doesn't jump the queue.
+  const due = rows.filter((r) => r.st.kind === "due").sort((a, b) => b.st.progress - a.st.progress);
+  const soon = rows.filter((r) => r.st.kind === "soon").sort((a, b) => a.st.daysLeft - b.st.daysLeft);
+  const later = rows.filter((r) => r.st.kind === "later").sort((a, b) => a.st.daysLeft - b.st.daysLeft);
+  const headline = !S.chores.length ? "Nothing to track yet"
+    : due.length === 0 ? "You're all caught up"
+    : due.length === 1 ? "1 thing is due" : `${due.length} things are due`;
+  const sub = !S.chores.length ? "" : soon.length ? `${soon.length} more coming up soon.` : later.length ? `Next: ${esc(later[0].c.name)}, ${whenText(later[0].st).toLowerCase()}.` : "";
+  app.innerHTML = `
+  <div class="wrap">
+    <header class="top">
+      <div class="top-text">
+        <p class="brand">Lately</p>
+        <p class="sub">${longDate(t)}</p>
+        <h1 class="today">${headline}</h1>
+        ${sub ? `<p class="sub">${sub}</p>` : ""}
+      </div>
+      <button type="button" class="ghost" id="more-btn">More</button>
+    </header>
+    ${S.sample ? `<div class="banner"><p>You're looking at sample chores. Mark one done to see how it works.</p><button type="button" class="linkbtn" id="start-own">Start my own list</button></div>` : ""}
+    ${!S.chores.length ? `<div class="empty"><h2>Add the first thing you do every so often</h2><p>Bedsheets, plants, the kettle. Lately keeps count of the days so you don't have to.</p></div>` : ""}
+    ${section("Due", due, true)}
+    ${section("Coming up", soon, true)}
+    ${later.length ? `<details class="section" id="later-sec"${!due.length && !soon.length ? " open" : ""}><summary class="section-head">Later <span class="count">${later.length}</span></summary><ul class="list">${later.map(cardHTML).join("")}</ul></details>` : ""}
+    <p class="privacy">Saved on this device only. Nothing is sent anywhere.</p>
+  </div>
+  <button type="button" class="fab" id="add-btn">+ Add chore</button>`;
+  app.querySelectorAll("[data-done]").forEach((b) => b.addEventListener("click", () => markDone(b.dataset.done, t)));
+  app.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openChore(b.dataset.open)));
+  $("add-btn").addEventListener("click", openAdd);
+  $("more-btn").addEventListener("click", openMore);
+  if (S.sample) $("start-own").addEventListener("click", () => { S = blank(); save(); render(); window.scrollTo(0, 0); });
+}
+function section(title, rows) {
+  if (!rows.length) return "";
+  return `<section class="section" aria-label="${title}"><h2 class="section-head">${title} <span class="count">${rows.length}</span></h2><ul class="list">${rows.map(cardHTML).join("")}</ul></section>`;
+}
+function cardHTML({ c, st }) {
+  const t = today();
+  const w = Math.min(100, (Math.min(st.progress, 1.25) / 1.25) * 100);
+  return `<li class="chore is-${st.kind}" id="c-${c.id}">
+    <button type="button" class="chore-main" data-open="${c.id}" aria-label="${esc(c.name)}: ${esc(whenText(st))}. ${esc(lastText(c, t))}. Open details">
+      <span class="chore-name">${esc(c.name)}</span>
+      <span class="chore-when">${esc(whenText(st))}</span>
+      <span class="meter" aria-hidden="true"><span class="fill" style="--w:${w.toFixed(1)}%"></span><span class="notch"></span></span>
+      <span class="chore-meta"><span>${esc(lastText(c, t))}</span><span>${esc(everyLabel(c.every))}</span></span>
+    </button>
+    <button type="button" class="done-btn" data-done="${c.id}" aria-label="Mark ${esc(c.name)} done today">Done</button>
+  </li>`;
+}
+
+function logDone(c, date) {
+  if (c.history.includes(date)) return false;
+  c.history.push(date);
+  c.history.sort();
+  c.snooze = null;
+  return true;
+}
+function markDone(id, date, opts = {}) {
+  const c = find(id); if (!c) return;
+  const before = JSON.stringify(S);
+  if (!logDone(c, date)) { toast(`${c.name} is already logged for ${date === today() ? "today" : shortDate(date)}.`); return; }
+  save();
+  const st = statusOf(c, today());
+  if (opts.reopen) { render(); openChore(id); } else { closeSheet(); render(); }
+  const el = $("c-" + id); if (el) el.classList.add("just-done");
+  toast(`${c.name}: logged ${date === today() ? "today" : shortDate(date)}. ${whenText(st)}.`, before);
+}
+
+/* ---------- Sheets ---------- */
+let lastFocus = null;
+function openSheet(html) {
+  lastFocus = document.activeElement;
+  const sh = $("sheet");
+  sh.innerHTML = `<div class="sheet-inner"><div class="grabber" aria-hidden="true"></div>${html}</div>`;
+  sh.hidden = false; $("scrim").hidden = false;
+  sh.scrollTop = 0;
+  const close = sh.querySelector(".close"); if (close) close.addEventListener("click", closeSheet);
+  const focusEl = sh.querySelector("[autofocus]") || sh.querySelector("h2");
+  if (focusEl) { focusEl.setAttribute("tabindex", focusEl.getAttribute("tabindex") || "-1"); focusEl.focus({ preventScroll: true }); }
+  return sh;
+}
+function closeSheet() {
+  if ($("sheet").hidden) return;
+  $("sheet").hidden = true; $("scrim").hidden = true; $("sheet").innerHTML = "";
+  if (lastFocus && document.body.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+}
+$("scrim").addEventListener("click", closeSheet);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+const head = (title) => `<div class="sheet-head"><h2 id="sheet-title">${esc(title)}</h2><button type="button" class="close" aria-label="Close">×</button></div>`;
+
+function openChore(id) {
+  const c = find(id); if (!c) return closeSheet();
+  const t = today(), st = statusOf(c, t), rh = rhythmOf(c);
+  const hist = c.history.slice().reverse();
+  const sh = openSheet(`
+    ${head(c.name)}
+    <div class="panel is-${st.kind}">
+      <div class="status-big">${esc(whenText(st))}</div>
+      <p class="mini">${esc(lastText(c, t))} · ${esc(everyLabel(c.every))} · ${esc(c.area)}${c.snooze && c.snooze > t ? ` · pushed to ${shortDate(c.snooze)}` : ""}</p>
+      <div class="actions">
+        <button type="button" class="primary" id="d-done">Done today</button>
+        <button type="button" class="secondary" id="d-earlier" aria-expanded="false" aria-controls="earlier">Done on an earlier day</button>
+        ${st.kind !== "later" ? `<button type="button" class="secondary" id="d-snooze">Not today</button>` : ""}
+      </div>
+      <div id="earlier" class="panel" style="padding:0" hidden>
+        <div class="row">
+          <button type="button" class="secondary" data-ago="1">Yesterday</button>
+          <button type="button" class="secondary" data-ago="2">2 days ago</button>
+        </div>
+        <div class="row">
+          <input type="date" id="d-date" max="${t}" aria-label="Pick the day you did it" value="${addDays(t, -3)}">
+          <button type="button" class="secondary" id="d-date-log">Log that day</button>
+        </div>
+      </div>
+    </div>
+    ${rh ? `<div class="suggest"><p>You've been doing this about every ${plural(rh.days, "day")}. Change it to <strong>${esc(everyLabel(rh.every).toLowerCase())}</strong>?</p><div class="actions"><button type="button" class="primary" id="d-rhythm">Change to ${esc(everyLabel(rh.every).toLowerCase())}</button></div></div>` : ""}
+    <div class="panel">
+      <h3>History</h3>
+      ${hist.length ? `<ul class="history">${hist.map((d, i) => {
+        const prev = hist[i + 1];
+        const gap = prev ? `${plural(daysBetween(prev, d), "day")} after the time before` : "First time logged";
+        return `<li><span><span class="num">${shortDate(d)}</span><br><span class="gap">${gap}</span></span><button type="button" class="x" data-remove="${d}" aria-label="Remove ${shortDate(d)}">Remove</button></li>`;
+      }).join("")}</ul>` : `<p class="mini">Nothing logged yet. Tap Done today, or log an earlier day.</p>`}
+    </div>
+    <form class="panel" id="edit-form">
+      <h3>Edit</h3>
+      <div class="field"><label for="e-name">Name</label><input type="text" id="e-name" value="${esc(c.name)}" maxlength="60" required></div>
+      <div class="row">
+        <div class="field"><label for="e-every">How often</label><select id="e-every">${intervalOptions(c.every)}</select></div>
+        <div class="field"><label for="e-area">Area</label><select id="e-area">${areaOptions(c.area)}</select></div>
+      </div>
+      <p class="error" id="e-err" hidden></p>
+      <div class="actions"><button type="submit" class="primary">Save changes</button><button type="button" class="secondary" id="e-del">Delete chore</button></div>
+      <div class="confirm" id="del-confirm" hidden>
+        <p>Delete ${esc(c.name)} and its history?</p>
+        <div class="actions"><button type="button" class="danger" id="del-yes">Delete</button><button type="button" class="secondary" id="del-no">Keep it</button></div>
+      </div>
+    </form>`);
+  sh.querySelector("#d-done").addEventListener("click", () => markDone(id, t));
+  sh.querySelector("#d-earlier").addEventListener("click", (e) => {
+    const p = sh.querySelector("#earlier"); p.hidden = !p.hidden; e.currentTarget.setAttribute("aria-expanded", String(!p.hidden));
+  });
+  sh.querySelectorAll("[data-ago]").forEach((b) => b.addEventListener("click", () => markDone(id, addDays(t, -Number(b.dataset.ago)), { reopen: true })));
+  sh.querySelector("#d-date-log").addEventListener("click", () => {
+    const v = sh.querySelector("#d-date").value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || v > t) { toast("Pick a day up to today."); return; }
+    markDone(id, v, { reopen: true });
+  });
+  const sn = sh.querySelector("#d-snooze");
+  if (sn) sn.addEventListener("click", () => {
+    const before = JSON.stringify(S);
+    c.snooze = addDays(t, 1); save(); closeSheet(); render();
+    toast(`${c.name} moved to tomorrow.`, before);
+  });
+  const rb = sh.querySelector("#d-rhythm");
+  if (rb) rb.addEventListener("click", () => {
+    const before = JSON.stringify(S);
+    c.every = rh.every; save(); render(); openChore(id);
+    toast(`${c.name} is now ${everyLabel(rh.every).toLowerCase()}.`, before);
+  });
+  sh.querySelectorAll("[data-remove]").forEach((b) => b.addEventListener("click", () => {
+    const before = JSON.stringify(S);
+    c.history = c.history.filter((d) => d !== b.dataset.remove); save(); render(); openChore(id);
+    toast(`Removed ${shortDate(b.dataset.remove)}.`, before);
+  }));
+  sh.querySelector("#edit-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = sh.querySelector("#e-name").value.trim().replace(/\s+/g, " ");
+    if (!name) { const er = sh.querySelector("#e-err"); er.textContent = "Give the chore a name."; er.hidden = false; return; }
+    c.name = name; c.every = keyEvery(sh.querySelector("#e-every").value); c.area = sh.querySelector("#e-area").value;
+    save(); closeSheet(); render(); toast("Saved.");
+  });
+  sh.querySelector("#e-del").addEventListener("click", () => { sh.querySelector("#del-confirm").hidden = false; sh.querySelector("#del-yes").focus(); });
+  sh.querySelector("#del-no").addEventListener("click", () => { sh.querySelector("#del-confirm").hidden = true; });
+  sh.querySelector("#del-yes").addEventListener("click", () => {
+    const before = JSON.stringify(S);
+    S.chores = S.chores.filter((x) => x.id !== id); save(); closeSheet(); render();
+    toast(`Deleted ${c.name}.`, before);
+  });
+}
+
+function openAdd() {
+  const t = today();
+  const sh = openSheet(`
+    ${head("Add a chore")}
+    <form class="panel" id="add-form" novalidate>
+      <div class="field"><label for="a-name">What do you do every so often?</label>
+        <input type="text" id="a-name" list="a-suggest" maxlength="60" placeholder="e.g. Clean the gutters" autocomplete="off" autofocus>
+        <datalist id="a-suggest">${CATALOG.map((c) => `<option value="${esc(c.name)}"></option>`).join("")}</datalist></div>
+      <div class="row">
+        <div class="field"><label for="a-every">How often</label><select id="a-every">${intervalOptions({ n: 1, u: "w" })}</select></div>
+        <div class="field"><label for="a-area">Area</label><select id="a-area">${areaOptions("Home")}</select></div>
+      </div>
+      <div class="field"><span id="a-last-label">Last done</span>
+        <div class="seg" role="radiogroup" aria-labelledby="a-last-label">
+          ${[["0", "Today"], ["1", "Yesterday"], ["pick", "Pick a day"], ["none", "Can't remember"]].map(([v, l], i) => `<label><input type="radio" name="a-last" value="${v}"${i === 3 ? " checked" : ""}><span>${l}</span></label>`).join("")}
+        </div>
+        <input type="date" id="a-date" max="${t}" value="${addDays(t, -7)}" aria-label="Day you last did it" hidden>
+      </div>
+      <p class="error" id="a-err" hidden></p>
+      <button type="submit" class="primary">Add chore</button>
+    </form>`);
+  const name = sh.querySelector("#a-name");
+  name.addEventListener("change", () => {
+    const hit = CATALOG.find((c) => c.name.toLowerCase() === name.value.trim().toLowerCase());
+    if (hit) { sh.querySelector("#a-every").innerHTML = intervalOptions(hit.every); sh.querySelector("#a-area").value = hit.area; }
+  });
+  sh.querySelectorAll('input[name="a-last"]').forEach((r) => r.addEventListener("change", () => {
+    sh.querySelector("#a-date").hidden = sh.querySelector('input[name="a-last"]:checked').value !== "pick";
+  }));
+  sh.querySelector("#add-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const err = sh.querySelector("#a-err");
+    const n = name.value.trim().replace(/\s+/g, " ");
+    if (!n) { err.textContent = "Give the chore a name."; err.hidden = false; name.focus(); return; }
+    const last = sh.querySelector('input[name="a-last"]:checked').value;
+    let history = [];
+    if (last === "0" || last === "1") history = [addDays(t, -Number(last))];
+    if (last === "pick") {
+      const v = sh.querySelector("#a-date").value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || v > t) { err.textContent = "Pick a day up to today."; err.hidden = false; return; }
+      history = [v];
+    }
+    const c = { id: uid(), name: n, area: sh.querySelector("#a-area").value, every: keyEvery(sh.querySelector("#a-every").value), history, snooze: null };
+    S.chores.push(c); save(); closeSheet(); render();
+    toast(`Added ${n}. ${whenText(statusOf(c, t))}.`);
+  });
+}
+
+function openMore() {
+  const sh = openSheet(`
+    ${head("More")}
+    <div class="panel">
+      <h3>Your data</h3>
+      <p class="mini">Your chores are saved on this device only. Copy a backup to keep somewhere safe, or paste one to restore it.</p>
+      <div class="actions"><button type="button" class="secondary" id="m-copy">Copy backup</button></div>
+      <textarea id="m-backup" aria-label="Backup text" placeholder="Paste a backup here to restore it"></textarea>
+      <p class="error" id="m-err" hidden></p>
+      <div class="actions"><button type="button" class="secondary" id="m-restore">Restore from pasted backup</button></div>
+    </div>
+    <div class="panel">
+      <h3>Start again</h3>
+      <div class="actions">
+        <button type="button" class="secondary" id="m-sample">Load sample chores</button>
+        <button type="button" class="secondary" id="m-erase">Erase everything</button>
+      </div>
+      <div class="confirm" id="m-confirm" hidden><p id="m-confirm-msg"></p>
+        <div class="actions"><button type="button" class="danger" id="m-yes">Yes, replace my list</button><button type="button" class="secondary" id="m-no">Cancel</button></div></div>
+    </div>`);
+  const ta = sh.querySelector("#m-backup");
+  sh.querySelector("#m-copy").addEventListener("click", () => {
+    const text = JSON.stringify(S);
+    ta.value = text;
+    const fallback = () => { ta.focus(); ta.select(); toast("Backup is selected below. Copy it from there."); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast("Backup copied."), fallback);
+    else fallback();
+  });
+  sh.querySelector("#m-restore").addEventListener("click", () => {
+    const err = sh.querySelector("#m-err");
+    let s = null; try { s = JSON.parse(ta.value); } catch (e) { s = null; }
+    if (!valid(s)) { err.textContent = "That doesn't look like a Lately backup. Paste the whole text you copied."; err.hidden = false; return; }
+    const before = JSON.stringify(S); S = s; S.setup = true; save(); closeSheet(); render(); toast("Backup restored.", before);
+  });
+  let pending = null;
+  const ask = (msg, fn) => { pending = fn; sh.querySelector("#m-confirm-msg").textContent = msg; sh.querySelector("#m-confirm").hidden = false; sh.querySelector("#m-yes").focus(); };
+  sh.querySelector("#m-sample").addEventListener("click", () => ask("Replace your list with sample chores?", () => sampleState()));
+  sh.querySelector("#m-erase").addEventListener("click", () => ask("Erase all chores and history and start setup again?", () => blank()));
+  sh.querySelector("#m-no").addEventListener("click", () => { sh.querySelector("#m-confirm").hidden = true; });
+  sh.querySelector("#m-yes").addEventListener("click", () => {
+    const before = JSON.stringify(S); S = pending(); save(); closeSheet(); render(); window.scrollTo(0, 0);
+    toast("Done.", before);
+  });
+}
+
+// Day rollover: refresh when the page comes back into view on a new day.
+let shownDay = today();
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && today() !== shownDay) { shownDay = today(); if ($("sheet").hidden) render(); }
+});
+
+// Expose pure logic for tests (no effect on the app).
+window.__lately = { statusOf, addInterval, addMonths, rhythmOf, daysBetween, addDays, whenText };
+
+const boot = () => { S = load(); render(); };
+if (window.__latelyBoot) window.__latelyBoot(boot); else boot();
+})();
+</script>
