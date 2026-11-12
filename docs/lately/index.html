@@ -113,6 +113,7 @@ details.section[open] > summary::after { content: "Hide"; }
 .chore.is-due { border-color: color-mix(in srgb, var(--due) 45%, transparent); }
 .chore-main { border: 0; background: none; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .chore-name { font-weight: 700; font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.chore-name::after { content: " ›"; color: var(--muted); font-weight: 400; }
 .chore-meta { color: var(--muted); font-size: 14px; display: flex; flex-wrap: wrap; gap: 2px 10px; }
 .chore-when { font-size: 14px; font-weight: 700; }
 .is-due .chore-when { color: var(--due-ink); }
@@ -128,7 +129,7 @@ details.section[open] > summary::after { content: "Hide"; }
   border: 0; border-radius: 999px; padding: 10px 16px; min-width: 76px; min-height: 44px;
   background: var(--accent); color: var(--accent-ink); font-weight: 700;
 }
-.is-later .done-btn, .is-soon .done-btn { background: var(--accent-wash); color: var(--accent); }
+.is-later .done-btn, .is-soon .done-btn { background: var(--card); color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
 .done-btn:active { transform: scale(.97); }
 
 .empty { background: var(--card); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; }
@@ -181,6 +182,7 @@ details.section[open] > summary::after { content: "Hide"; }
 .when-row { background: var(--card); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
 .when-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; }
 .when-top strong { min-width: 0; overflow-wrap: anywhere; }
+.when-note { margin: 0; font-size: 13px; color: var(--muted); }
 .seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: var(--track); border-radius: 10px; padding: 3px; }
 .seg label { position: relative; }
 .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
@@ -240,6 +242,7 @@ textarea { min-height: 120px; font: 13px/1.4 var(--font-num); }
   box-shadow: 0 16px 32px -14px rgba(0, 0, 0, .6);
 }
 .toast p { margin: 0; min-width: 0; }
+.toast.over-sheet { bottom: auto; top: calc(12px + env(safe-area-inset-top, 0px)); }
 .toast button { border: 0; background: none; color: var(--paper); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; padding: 6px 4px; flex: none; }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -318,7 +321,7 @@ function statusOf(c, t) {
   return { kind, dueOn, daysLeft, over: Math.max(0, -daysLeft), progress: elapsed / I, elapsed, never: false };
 }
 function whenText(st) {
-  if (st.never) return "Due now · not logged yet";
+  if (st.never) return "Due now";
   if (st.kind === "due") return st.over === 0 ? "Due today" : st.over === 1 ? "Due since yesterday" : `Due ${plural(st.over, "day")} ago`;
   if (st.daysLeft === 1) return "Due tomorrow";
   return `Due in ${plural(st.daysLeft, "day")}`;
@@ -415,6 +418,7 @@ function toast(msg, undoState) {
   const act = $("toast-act");
   act.hidden = !undoState;
   toastFn = undoState ? () => { S = JSON.parse(undoState); save(); render(); hideToast(); toast("Undone."); } : null;
+  $("toast").classList.toggle("over-sheet", !$("sheet").hidden);
   $("toast").hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(hideToast, undoState ? 6000 : 3000);
@@ -486,6 +490,8 @@ function updatePickCount() {
   $("setup-next").disabled = !setupPicked.size;
 }
 
+const WHEN_BACK = { today: 0, week: 3, lastweek: 9 };
+const whenNote = (w) => w in WHEN_BACK ? `Counts as ${shortDate(addDays(today(), -WHEN_BACK[w]))}. You can fix the date later.` : "Shows as due now, so you can start fresh.";
 const WHEN_OPTS = [["today", "Today"], ["week", "This week"], ["lastweek", "Last week"], ["unknown", "Can't remember"]];
 function renderSetupWhen() {
   const picked = [...setupPicked.values()];
@@ -505,8 +511,9 @@ function renderSetupWhen() {
           <select id="every-${i}" data-name="${esc(p.name)}" aria-label="How often: ${esc(p.name)}">${intervalOptions(p.every)}</select>
         </div>
         <div class="seg" role="radiogroup" aria-label="Last done: ${esc(p.name)}">
-          ${WHEN_OPTS.map(([v, label]) => `<label><input type="radio" name="when-${i}" value="${v}" data-name="${esc(p.name)}"${(setupWhen[p.name] || "unknown") === v ? " checked" : ""}><span>${label}</span></label>`).join("")}
+          ${WHEN_OPTS.map(([v, label]) => `<label><input type="radio" name="when-${i}" value="${v}" data-name="${esc(p.name)}" data-i="${i}"${(setupWhen[p.name] || "unknown") === v ? " checked" : ""}><span>${label}</span></label>`).join("")}
         </div>
+        <p class="when-note" id="note-${i}">${whenNote(setupWhen[p.name] || "unknown")}</p>
       </li>`).join("")}
     </ul>
   </div>
@@ -517,13 +524,16 @@ function renderSetupWhen() {
   app.querySelectorAll("select[data-name]").forEach((s) => s.addEventListener("change", () => {
     setupPicked.get(s.dataset.name).every = keyEvery(s.value);
   }));
-  app.querySelectorAll('input[type="radio"]').forEach((r) => r.addEventListener("change", () => { setupWhen[r.dataset.name] = r.value; }));
+  app.querySelectorAll('input[type="radio"]').forEach((r) => r.addEventListener("change", () => {
+    setupWhen[r.dataset.name] = r.value;
+    $("note-" + r.dataset.i).textContent = whenNote(r.value);
+  }));
   $("setup-back").addEventListener("click", () => { setupStep = 1; render(); });
   $("setup-finish").addEventListener("click", finishSetup);
 }
 function finishSetup() {
   const t = today();
-  const back = { today: 0, week: 3, lastweek: 9 };
+  const back = WHEN_BACK;
   S = {
     v: 1, setup: true, sample: false,
     chores: [...setupPicked.values()].map((p) => {
@@ -547,10 +557,11 @@ function render() {
   const due = rows.filter((r) => r.st.kind === "due").sort((a, b) => b.st.progress - a.st.progress);
   const soon = rows.filter((r) => r.st.kind === "soon").sort((a, b) => a.st.daysLeft - b.st.daysLeft);
   const later = rows.filter((r) => r.st.kind === "later").sort((a, b) => a.st.daysLeft - b.st.daysLeft);
+  const pushed = rows.filter((r) => r.c.snooze && r.c.snooze > t && r.st.kind !== "due").length;
   const headline = !S.chores.length ? "Nothing to track yet"
-    : due.length === 0 ? "You're all caught up"
+    : due.length === 0 ? (pushed ? "Nothing due today" : "You're all caught up")
     : due.length === 1 ? "1 thing is due" : `${due.length} things are due`;
-  const sub = !S.chores.length ? "" : soon.length ? `${soon.length} more coming up soon.` : later.length ? `Next: ${esc(later[0].c.name)}, ${whenText(later[0].st).toLowerCase()}.` : "";
+  const sub = !S.chores.length ? "" : due.length === 0 && pushed ? `${plural(pushed, "chore")} moved to tomorrow.` : soon.length ? `${soon.length} more coming up soon.` : later.length ? `Next: ${esc(later[0].c.name)}, ${whenText(later[0].st).toLowerCase()}.` : "";
   app.innerHTML = `
   <div class="wrap">
     <header class="top">
@@ -566,7 +577,7 @@ function render() {
     ${!S.chores.length ? `<div class="empty"><h2>Add the first thing you do every so often</h2><p>Bedsheets, plants, the kettle. Lately keeps count of the days so you don't have to.</p></div>` : ""}
     ${section("Due", due, true)}
     ${section("Coming up", soon, true)}
-    ${later.length ? `<details class="section" id="later-sec"${!due.length && !soon.length ? " open" : ""}><summary class="section-head">Later <span class="count">${later.length}</span></summary><ul class="list">${later.map(cardHTML).join("")}</ul></details>` : ""}
+    ${later.length ? `<details class="section" id="later-sec" open><summary class="section-head">Later <span class="count">${later.length}</span></summary><ul class="list">${later.map(cardHTML).join("")}</ul></details>` : ""}
     <p class="privacy">Saved on this device only. Nothing is sent anywhere.</p>
   </div>
   <button type="button" class="fab" id="add-btn">+ Add chore</button>`;
@@ -646,7 +657,6 @@ function openChore(id) {
       <div class="actions">
         <button type="button" class="primary" id="d-done">Done today</button>
         <button type="button" class="secondary" id="d-earlier" aria-expanded="false" aria-controls="earlier">Done on an earlier day</button>
-        ${st.kind !== "later" ? `<button type="button" class="secondary" id="d-snooze">Not today</button>` : ""}
       </div>
       <div id="earlier" class="panel" style="padding:0" hidden>
         <div class="row">
@@ -654,10 +664,12 @@ function openChore(id) {
           <button type="button" class="secondary" data-ago="2">2 days ago</button>
         </div>
         <div class="row">
-          <input type="date" id="d-date" max="${t}" aria-label="Pick the day you did it" value="${addDays(t, -3)}">
+          <input type="date" id="d-date" max="${t}" aria-label="Pick the day you did it" value="${addDays(t, -1)}">
           <button type="button" class="secondary" id="d-date-log">Log that day</button>
         </div>
       </div>
+      ${st.kind !== "later" ? `<div class="actions"><button type="button" class="secondary" id="d-snooze">Not today</button></div>` : ""}
+      <p class="mini">The bar fills up as time passes. When it reaches the mark, the chore is due.</p>
     </div>
     ${rh ? `<div class="suggest"><p>You've been doing this about every ${plural(rh.days, "day")}. Change it to <strong>${esc(everyLabel(rh.every).toLowerCase())}</strong>?</p><div class="actions"><button type="button" class="primary" id="d-rhythm">Change to ${esc(everyLabel(rh.every).toLowerCase())}</button></div></div>` : ""}
     <div class="panel">

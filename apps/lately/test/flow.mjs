@@ -85,6 +85,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
   await page.getByRole("radiogroup", { name: "Last done: Water plants" }).getByRole("radio", { name: "Last week" }).click();
   await page.getByRole("radiogroup", { name: "Last done: Change bedsheets" }).getByRole("radio", { name: "This week" }).click();
   await page.getByRole("radiogroup", { name: "Last done: Clean gutters" }).getByRole("radio", { name: "Today" }).click();
+  eq("setup shows the date a vague answer stands for", await page.locator("#note-0").textContent(), "Counts as Tue 3 Nov. You can fix the date later.");
   await page.getByLabel("How often: Clean gutters").selectOption({ label: "Every 3 months" });
   if (shots) await page.screenshot({ path: join(shots, "2-when.png") });
   await page.getByRole("button", { name: "Show my list" }).click();
@@ -131,6 +132,7 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
   eq("added chore is due", await page.getByRole("region", { name: "Due" }).locator(".chore-name").allTextContents(), ["Descale kettle"]);
   await page.getByRole("button", { name: /^Descale kettle:/ }).click();
   await page.getByRole("button", { name: "Not today" }).click();
+  eq("headline is honest after a skip", await page.getByRole("heading", { level: 1 }).textContent(), "Nothing due today");
   eq("Not today moves it to Coming up", await page.getByRole("region", { name: "Coming up" }).locator(".chore-name").allTextContents(), ["Descale kettle"]);
 
   // Empty name is rejected with a clear message
@@ -140,7 +142,6 @@ const noSideScroll = (page) => page.evaluate(() => document.documentElement.scro
   await page.keyboard.press("Escape");
 
   // Edit and delete with in-page confirmation
-  await page.locator("#later-sec > summary").click();
   await page.getByRole("button", { name: /^Clean gutters:/ }).click();
   await page.getByRole("button", { name: "Delete chore" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();

@@ -78,7 +78,7 @@ Gaps in the research: Google Play listing pages didn't render for the reader, so
 
 ## Test record
 
-Automated: `test/flow.mjs`, headless Chromium, 390×844 phone screen, clock fixed to 12 Nov 2026. **47 of 47 checks pass.**
+Automated: `test/flow.mjs`, headless Chromium, 390×844 phone screen, clock fixed to 12 Nov 2026. **49 of 49 checks pass.**
 
 - **Date logic:** month ends (31 Jan + 1 month = 28 Feb), leap years, crossing a year, day counts across a daylight-saving change, due-today boundaries, snooze, sorting fairness, learned-rhythm suggestion on and off.
 - **New-user flow, driven only by visible labels:** setup with three suggested chores plus one typed in; set last-done answers and one interval; list headline and Due section correct; Done updates the list and the toast says when it's next due; Undo; data survives a reload; log yesterday from the detail sheet; add a chore with a picked date (a known name fills in its usual interval); Not today; empty-name error; delete with confirmation; refresh on a new day while the app is open; no sideways scrolling.
@@ -87,7 +87,27 @@ Automated: `test/flow.mjs`, headless Chromium, 390×844 phone screen, clock fixe
 
 Bugs found and fixed during testing: logging an earlier day didn't refresh the list behind the detail sheet; "3 mores coming up soon" wording.
 
-First-time-user walkthrough: see the section below.
+**First-time-user walkthrough (proxy).** A separate agent with no knowledge of the app drove it on a phone-sized screen from screenshots alone, with no access to the code. It completed all five tasks with no wrong taps:
+
+| Task | Taps |
+|---|---|
+| Set up 4 chores | 9 |
+| Log one done | 1 |
+| Log yesterday | 3 |
+| Skip a due chore for today | 2 |
+| Tell what's due and when | read from the screen |
+
+It found friction, all fixed and rechecked:
+
+- Cards didn't look like they open, which hid "earlier day" and "Not today". Cards now have a ›.
+- After a skip, the headline said "You're all caught up". It now says "Nothing due today" and how many were moved.
+- The Later list was collapsed. It's now open.
+- "This week" and "Last week" were vague. Each answer now shows the date it stands for.
+- Toasts covered the detail sheet's buttons. They move to the top while a sheet is open.
+- "Not today" sat apart from the earlier-day options, and the date picker defaulted to 3 days ago. The layout is reordered and the picker defaults to yesterday.
+- Done on Later cards looked disabled, "not logged yet" appeared twice, and the progress bar was unexplained. Done is now outlined, the duplicate is removed, and the bar has a one-line explanation in the detail sheet.
+
+This is a stand-in for real users, not user research.
 
 ## Still needs validation
 
